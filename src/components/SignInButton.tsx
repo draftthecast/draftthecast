@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignInButton({ next = "/", label = "Continue with Google" }: { next?: string; label?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [inApp, setInApp] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Google blocks sign-in inside apps' built-in browsers (Instagram, Facebook, TikTok and others).
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    setInApp(/Instagram|FBAN|FBAV|FB_IAB|Messenger|Line\/|LinkedInApp|Snapchat|musical_ly|TikTok|BytedanceWebview|Twitter|; wv\)/i.test(ua));
+  }, []);
 
   async function signIn() {
     setBusy(true);
@@ -19,6 +27,31 @@ export default function SignInButton({ next = "/", label = "Continue with Google
       setError("Google sign-in didn't start. Try again in a moment.");
       setBusy(false);
     }
+  }
+
+  if (inApp) {
+    return (
+      <div className="note sun" style={{ flexDirection: "column", alignItems: "flex-start" }}>
+        <span>
+          <b>Open this page in Safari or Chrome to sign in.</b> Google doesn&apos;t allow sign-in inside this app&apos;s built-in browser. Tap the
+          menu (••• or ⋮) and choose &quot;Open in browser,&quot; or copy the link.
+        </span>
+        <button
+          className="btn small"
+          type="button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(window.location.href);
+              setCopied(true);
+            } catch {
+              setCopied(false);
+            }
+          }}
+        >
+          {copied ? "Link copied" : "Copy link"}
+        </button>
+      </div>
+    );
   }
 
   return (

@@ -3,8 +3,8 @@ import { getUser } from "@/lib/supabase/server";
 import SignInButton from "@/components/SignInButton";
 import { CreateLeague, JoinWithCode } from "@/components/HomeForms";
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ signin?: string }> }) {
-  const { signin } = await searchParams;
+export default async function Home({ searchParams }: { searchParams: Promise<{ signin?: string; reason?: string }> }) {
+  const { signin, reason } = await searchParams;
   const { supabase, user } = await getUser();
 
   if (!user) {
@@ -17,7 +17,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
             really knows the show.
           </p>
           <SignInButton />
-          {signin === "failed" && <span className="error">Sign-in didn&apos;t finish. Try again.</span>}
+          {signin === "failed" && (
+            <span className="error">
+              Sign-in didn&apos;t finish{reason ? ` (${reason})` : ""}. Try again, and if it keeps happening, open the site in Safari or Chrome instead of
+              an app&apos;s built-in browser.
+            </span>
+          )}
         </section>
         <ol className="steps">
           <li>
