@@ -9,7 +9,7 @@ Fantasy leagues for reality TV, starting with Hell's Kitchen Season 25. Friends 
 - **Leagues:** anyone signed in can start a league and share its invite link. The creator is the commissioner.
 - **Draft:** "take turns" (snake, each chef once) or "free pick" (chefs can repeat). The database checks turns, so two people can't grab the same chef.
 - **Weekly guess:** pick who goes home. Guesses lock automatically at the episode's air time, and other people's guesses stay hidden until then.
-- **Results:** the site admin enters each episode once at `/admin`, and every league's points update.
+- **Results:** a scheduled task writes each episode's results to `data/`, a GitHub Action syncs them to Supabase, and every league's points update.
 - **Scoring:** see `src/lib/scoring.ts` (tested in `scoring.test.ts`).
 
 ## One-time setup
@@ -54,8 +54,18 @@ Fantasy leagues for reality TV, starting with Hell's Kitchen Season 25. Friends 
 ### 5. Start your league
 Create a league on the home page, copy the invite link from the **Commissioner** tab, and send it to friends. Do a practice pick with one friend, then use **Clear all picks** before the real draft.
 
-## Weekly routine
-After each episode airs, open **Enter results**, pick the episode, tick what happened, check **Post these results**, and save. Update an episode's air time there if the network moves it.
+## Weekly results (automatic)
+1. The day after each episode airs, a scheduled Claude task reads recaps and writes `data/hk25/ep-NN.json` (format and rules in `data/README.md`), then pushes it to `main`.
+2. The **Sync results** GitHub Action copies the files into Supabase. Standings update right away.
+3. If the elimination can't be confirmed from two sources, the file is saved with `"posted": false`, which doesn't count yet. Fix it by editing the file on GitHub and setting `"posted": true`.
+
+One-time setup for this: in GitHub, open the repo's **Settings**, then **Secrets and variables**, then **Actions**, and add two repository secrets:
+- `SUPABASE_URL`: the Project URL
+- `SUPABASE_SERVICE_ROLE_KEY`: from Supabase **Project Settings**, then **API Keys**, the `service_role` (or secret) key. Keep this one private.
+
+Then open **Actions**, choose **Sync results**, and click **Run workflow** once to check it works.
+
+The `/admin` page still works for quick fixes, but the files win: the next sync overwrites anything changed there.
 
 ## Local development
 ```bash

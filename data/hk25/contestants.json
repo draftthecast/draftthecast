@@ -1,0 +1,5 @@
+{
+  "_note": "Contestant ids used in episode files. Must match the contestants table.",
+  "blue": { "miles": "Miles Anderson", "mike": "Mike Catuosco", "gabe": "Gabe Cerease", "dylan": "Dylan Duffy", "jonny": "Jonny Gudino", "aiden": "Aiden Ricklef", "valentin": "Valentin Royo", "diego": "Diego Sanchez", "miguel": "Miguel Soliz" },
+  "red": { "jeyda": "Jeyda Brooks", "kylie": "Kylie Budich", "reni": "Serenity \"Reni\" Lee", "mya": "Mya Gonsalves", "sandra": "Sandra Leclerc", "haley": "Haley Moss", "georgiana": "Georgiana Pahon", "nadia": "Nadia Phillips", "joy": "Joy Shi" }
+}
