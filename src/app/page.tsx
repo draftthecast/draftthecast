@@ -43,7 +43,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   }
 
   const [{ data: leagues }, { data: seasons }] = await Promise.all([
-    supabase.from("leagues").select("id, name, season_id, draft_status, seasons(title)").order("created_at", { ascending: false }),
+    supabase
+      .from("leagues")
+      .select("id, name, season_id, draft_status, seasons(title), league_members!inner(user_id)")
+      .eq("league_members.user_id", user.id)
+      .order("created_at", { ascending: false }),
     supabase.from("seasons").select("id, title").eq("active", true).order("created_at"),
   ]);
 

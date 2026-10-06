@@ -184,6 +184,9 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
 
   return (
     <>
+      {!me && isSiteAdmin && (
+        <div className="note"><span><b>You&apos;re viewing this league as the site admin.</b> You&apos;re not a member, so it doesn&apos;t appear on your home page.</span></div>
+      )}
       <div className="title">
         <span className="showtag" style={{ alignSelf: "flex-start" }}>{data.season?.title}</span>
         <h1>{league.name}</h1>
@@ -572,6 +575,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
         <h2>Results</h2>
         {isSiteAdmin && <a className="btn brand small" href="/admin">Enter results</a>}
       </div>
+      {!isSiteAdmin && <p className="soft small">Results are added automatically for every league after each episode airs. There&apos;s nothing for the commissioner to enter.</p>}
       {posted.length ? (
         <div className="results">
           {[...posted].reverse().map((ep) => (
@@ -597,7 +601,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
           ))}
         </div>
       ) : (
-        <div className="empty"><b>No results yet</b><span>Results go up after each episode airs, and everyone&apos;s points update.</span></div>
+        <div className="empty"><b>No results yet</b><span>Results are added automatically after each episode airs, and everyone&apos;s points update.</span></div>
       )}
     </section>
   );
