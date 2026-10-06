@@ -1,4 +1,4 @@
-import type { Contestant, Episode, FlagKey, Guess, League, Member, Pick, Team } from "./types.ts";
+import type { Contestant, Episode, FlagKey, Guess, League, LeagueResult, Member, Pick, Team } from "./types.ts";
 
 export const PTS = {
   survive: 2,
@@ -204,4 +204,24 @@ export function nextEpisode(episodes: Episode[]): Episode | null {
 export function isLocked(ep: Episode | null, now = Date.now()): boolean {
   if (!ep) return true;
   return ep.posted || (!!ep.air_at && new Date(ep.air_at).getTime() <= now);
+}
+
+/** Site-wide episodes with this league's own results laid over them, episode by episode. */
+export function effectiveEpisodes(season: Episode[], league: LeagueResult[]): Episode[] {
+  // Keep only the result fields from a league row; schedule fields always come from the site-wide episode.
+  const resultsOf = (r: LeagueResult) => {
+    const { league_id: _l, updated_by: _u, updated_at: _t, season_id: _s, title: _ti, air_at: _a, ...rest } =
+      r as LeagueResult & { season_id?: string; title?: string | null; air_at?: string | null };
+    return rest;
+  };
+  const own = new Map(league.map((r) => [r.num, r]));
+  const out: Episode[] = season.map((e) => {
+    const r = own.get(e.num);
+    return r ? { ...e, ...resultsOf(r), fromLeague: true } : e;
+  });
+  for (const r of league) {
+    if (season.some((e) => e.num === r.num)) continue;
+    out.push({ ...resultsOf(r), season_id: "", title: null, air_at: null, fromLeague: true });
+  }
+  return out.sort((a, b) => a.num - b.num);
 }

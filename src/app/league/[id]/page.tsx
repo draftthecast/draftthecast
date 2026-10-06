@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/supabase/server";
+import { adminViewOn, isAdmin } from "@/lib/viewMode";
 import LeagueApp from "./LeagueApp";
 
 export const metadata: Metadata = { title: "League" };
@@ -10,8 +11,11 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
   const { supabase, user } = await getUser();
   if (!user) redirect("/");
 
+  const adminView = await adminViewOn(await isAdmin(supabase, user.id));
   const { data: league } = await supabase.from("leagues").select("id").eq("id", id).maybeSingle();
-  if (!league) {
+  const { data: mine } = await supabase.from("league_members").select("id").eq("league_id", id).eq("user_id", user.id).maybeSingle();
+  // In player view, an admin sees exactly what a non-member would.
+  if (!league || (!mine && !adminView)) {
     return (
       <main className="empty">
         <b>You&apos;re not in this league</b>
@@ -19,6 +23,5 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
       </main>
     );
   }
-  const { data: admin } = await supabase.from("site_admins").select("user_id").eq("user_id", user.id).maybeSingle();
-  return <LeagueApp leagueId={id} userId={user.id} isSiteAdmin={!!admin} />;
+  return <LeagueApp leagueId={id} userId={user.id} isSiteAdmin={adminView} />;
 }

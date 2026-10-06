@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chefStates, draftInfo, standings } from "./scoring.ts";
+import { chefStates, draftInfo, effectiveEpisodes, standings } from "./scoring.ts";
 import type { Contestant, Episode, League, Member, Pick } from "./types.ts";
 
 const c = (id: string, team: "red" | "blue"): Contestant => ({ season_id: "hk25", id, name: id, team, age: 22, hometown: null });
@@ -50,4 +50,15 @@ test("snake order reverses each round", () => {
   const turns = [0, 1, 2, 3, 4, 5].map((k) => draftInfo(league, members, picks(k)).turn);
   assert.deepEqual(turns, ["a", "b", "c", "c", "b", "a"]);
   assert.equal(draftInfo(league, members, picks(6)).done, true);
+});
+
+test("a league's own results replace the site-wide ones for that episode", () => {
+  const season = [...eps, ep(3, { posted: false, air_at: "2026-10-08T20:00:00-04:00" })];
+  const own = [{ ...ep(3, { eliminated: ["mike"] }), league_id: "L", updated_by: null, updated_at: "" }];
+  const merged = effectiveEpisodes(season, own as never);
+  assert.equal(merged.length, 3);
+  assert.equal(merged[2].posted, true);
+  assert.deepEqual(merged[2].eliminated, ["mike"]);
+  assert.equal(merged[2].air_at, "2026-10-08T20:00:00-04:00");
+  assert.equal(chefStates(cast, merged, 1).mike.out, 3);
 });

@@ -9,7 +9,8 @@ Fantasy leagues for reality TV, starting with Hell's Kitchen Season 25. Friends 
 - **Leagues:** anyone signed in can start a league and share its invite link. The creator is the commissioner.
 - **Draft:** "take turns" (snake, each chef once) or "free pick" (chefs can repeat). The database checks turns, so two people can't grab the same chef.
 - **Weekly guess:** pick who goes home. Guesses lock automatically at the episode's air time, and other people's guesses stay hidden until then.
-- **Results:** a scheduled task writes each episode's results to `data/`, a GitHub Action syncs them to Supabase, and every league's points update.
+- **Results:** each league's commissioner can enter results for their own league from its Results tab. Site-wide results (entered at `/admin`, or synced from `data/`) fill in for any episode a league hasn't entered itself. A league's own entry always wins.
+- **Admin view:** site admins see every league and an Admin/Player toggle in the header. Player view shows the site the way everyone else sees it.
 - **Scoring:** see `src/lib/scoring.ts` (tested in `scoring.test.ts`).
 
 ## One-time setup
@@ -18,6 +19,7 @@ Fantasy leagues for reality TV, starting with Hell's Kitchen Season 25. Friends 
 1. Open your Supabase project, then **SQL Editor**, then **New query**.
 2. Paste all of `supabase/migrations/20261004000001_schema.sql` and click **Run**.
 3. New query again: paste `supabase/migrations/20261004000002_seed_hells_kitchen_25.sql` and click **Run**.
+3a. New query again: paste `supabase/migrations/20261005000003_league_results.sql` and click **Run**. This lets each league's commissioner enter results for their own league.
 4. Go to **Project Settings**, then **API** (or **Data API**). Copy the **Project URL** and the **anon** (or **publishable**) key.
 
 ### 2. Hosting (Vercel)

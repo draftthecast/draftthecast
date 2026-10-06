@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ResultsEditor, { draftFromEpisode, draftToRow, emptyDraft, type ResultsDraft } from "@/components/ResultsEditor";
 import { createClient } from "@/lib/supabase/client";
-import { PTS, chefStates, draftInfo, isLocked, nextEpisode, standings, type ChefState, type DraftInfo } from "@/lib/scoring";
-import type { Contestant, Episode, Guess, League, Member, Pick, Profile, Season } from "@/lib/types";
+import { PTS, chefStates, draftInfo, effectiveEpisodes, isLocked, nextEpisode, standings, type ChefState, type DraftInfo } from "@/lib/scoring";
+import type { Contestant, Episode, Guess, League, LeagueResult, Member, Pick, Profile, Season } from "@/lib/types";
 
 type Tab = "standings" | "draft" | "guess" | "chefs" | "results" | "rules" | "commish";
 const TABS: [Tab, string][] = [
@@ -23,7 +24,9 @@ interface Data {
   picks: Pick[];
   guesses: Guess[];
   contestants: Contestant[];
-  episodes: Episode[];
+  episodes: Episode[]; // site-wide results with this league's own entries laid over them
+  seasonEpisodes: Episode[];
+  leagueResults: LeagueResult[];
   profiles: Record<string, Profile>;
 }
 
@@ -50,13 +53,14 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
       setLoadError("This league couldn't be loaded. Refresh to try again.");
       return;
     }
-    const [season, members, picks, guesses, contestants, episodes] = await Promise.all([
+    const [season, members, picks, guesses, contestants, episodes, own] = await Promise.all([
       supabase.from("seasons").select("*").eq("id", league.season_id).maybeSingle(),
       supabase.from("league_members").select("*").eq("league_id", leagueId).order("joined_at"),
       supabase.from("picks").select("*").eq("league_id", leagueId).order("pick_no"),
       supabase.from("guesses").select("*").eq("league_id", leagueId),
       supabase.from("contestants").select("*").eq("season_id", league.season_id).order("name"),
       supabase.from("episodes").select("*").eq("season_id", league.season_id).order("num"),
+      supabase.from("league_results").select("*").eq("league_id", leagueId),
     ]);
     const userIds = (members.data ?? []).map((m) => m.user_id).filter(Boolean) as string[];
     const profiles: Record<string, Profile> = {};
@@ -72,7 +76,10 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
       picks: (picks.data ?? []) as Pick[],
       guesses: (guesses.data ?? []) as Guess[],
       contestants: (contestants.data ?? []) as Contestant[],
-      episodes: (episodes.data ?? []) as Episode[],
+      // league_results may not exist yet if its SQL hasn't been run; treat that as "no league entries".
+      episodes: effectiveEpisodes((episodes.data ?? []) as Episode[], own.error ? [] : ((own.data ?? []) as LeagueResult[])),
+      seasonEpisodes: (episodes.data ?? []) as Episode[],
+      leagueResults: own.error ? [] : ((own.data ?? []) as LeagueResult[]),
       profiles,
     });
   }, [supabase, leagueId]);
@@ -92,6 +99,7 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
       .on("postgres_changes", { event: "*", schema: "public", table: "guesses", filter: `league_id=eq.${leagueId}` }, soon)
       .on("postgres_changes", { event: "*", schema: "public", table: "leagues", filter: `id=eq.${leagueId}` }, soon)
       .on("postgres_changes", { event: "*", schema: "public", table: "episodes" }, soon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "league_results", filter: `league_id=eq.${leagueId}` }, soon)
       .subscribe();
     const onFocus = () => document.visibilityState === "visible" && soon();
     document.addEventListener("visibilitychange", onFocus);
@@ -179,6 +187,7 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
   const x: Ctx = {
     league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d,
     nextEp, locked, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab,
+    leagueResults: data.leagueResults, reload: load,
   };
   const View = VIEWS[tabs.some(([k]) => k === tab) ? tab : "standings"];
 
@@ -232,6 +241,7 @@ interface Ctx {
   run: (fn: () => PromiseLike<{ error: { message: string } | null }>, ok?: string) => Promise<boolean>;
   busy: boolean; supabase: ReturnType<typeof createClient>; flash: (m: string) => void;
   setConfirm: (c: { text: string; yes: string; run: () => void } | null) => void; setTab: (t: Tab) => void;
+  leagueResults: LeagueResult[]; reload: () => Promise<void>;
 }
 
 /* ---------- this week ---------- */
@@ -564,25 +574,66 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
 
 /* ---------- results ---------- */
 function Results({ x }: { x: Ctx }) {
-const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d, nextEp, locked, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab } = x;
+  const { league, contestants, episodes, CHEF, isCommish, isSiteAdmin, nextEp, posted, run, busy, supabase, flash, setConfirm, leagueResults, reload } = x;
+  const [edit, setEdit] = useState<ResultsDraft | null>(null);
   const names = (ids: string[]) => ids.map((id) => CHEF[id]?.name ?? id).join(", ");
   const teamWord = (v: Episode["challenge_win"]) =>
     v === "red" ? <span className="chip red">Red team</span> : v === "blue" ? <span className="chip blue">Blue team</span> : v === "both" ? <span className="chip plain">Both teams</span> : null;
   const line = (k: string, v: React.ReactNode) => (v && (typeof v !== "string" || v.length) ? <><dt>{k}</dt><dd>{v}</dd></> : null);
+  const hasOwn = (num: number) => leagueResults.some((r) => r.num === num);
+  const aired = !!nextEp && (!nextEp.air_at || new Date(nextEp.air_at).getTime() <= Date.now());
+
+  async function save(dr: ResultsDraft): Promise<string | null> {
+    const row = { ...draftToRow(dr, contestants), posted: true, league_id: league.id, num: dr.num, updated_at: new Date().toISOString() };
+    const { error } = await supabase.from("league_results").upsert(row, { onConflict: "league_id,num" });
+    if (error) return error.message.includes("league_results") ? "Results entry isn't switched on yet. Ask the site admin to run the latest database update." : error.message;
+    setEdit(null);
+    flash(`Episode ${dr.num} results saved. Standings are updated.`);
+    reload();
+    return null;
+  }
+
+  if (edit) {
+    return (
+      <ResultsEditor
+        initial={edit}
+        contestants={contestants}
+        episodes={episodes}
+        heading={`Episode ${edit.num} results`}
+        intro="These results count for this league only."
+        onSave={save}
+        onCancel={() => setEdit(null)}
+      />
+    );
+  }
+
   return (
     <section className="section">
       <div className="sechead">
         <h2>Results</h2>
-        {isSiteAdmin && <a className="btn brand small" href="/admin">Enter results</a>}
+        <span className="row">
+          {isCommish && nextEp && (
+            <button className="btn brand small" disabled={!aired} onClick={() => setEdit(emptyDraft(nextEp.num, nextEp))}>
+              {aired ? `Add episode ${nextEp.num} results` : `Episode ${nextEp.num} results open after it airs`}
+            </button>
+          )}
+          {isSiteAdmin && <a className="btn ghost small" href="/admin">Site-wide results</a>}
+        </span>
       </div>
-      {!isSiteAdmin && <p className="soft small">Results are added automatically for every league after each episode airs. There&apos;s nothing for the commissioner to enter.</p>}
+      <p className="soft small">
+        {isCommish
+          ? "After each episode airs, add what happened and everyone's points update. What you enter counts for this league only."
+          : "Your commissioner adds results after each episode airs, and everyone's points update."}
+      </p>
       {posted.length ? (
         <div className="results">
           {[...posted].reverse().map((ep) => (
             <article key={ep.num} className="ep">
               <div className="ephead">
                 <h3>Episode {ep.num}{ep.title ? `: ${ep.title}` : ""}</h3>
-                <span className="when">{fmtDate(ep.air_at)} {ep.num < league.start_episode && <span className="badge">before scoring</span>}</span>
+                <span className="when">
+                  {fmtDate(ep.air_at)} {ep.num < league.start_episode && <span className="badge">before scoring</span>}
+                </span>
               </div>
               <dl>
                 {line("Sent home", names([...ep.eliminated, ...ep.quit]))}
@@ -597,11 +648,26 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
                 {line("Winner", ep.winner ? CHEF[ep.winner]?.name : "")}
               </dl>
               {ep.notes && <p className="soft small">{ep.notes}</p>}
+              {isCommish && (
+                <div className="row">
+                  <button className="btn ghost small" disabled={busy} onClick={() => setEdit(draftFromEpisode(ep))}>Edit</button>
+                  {hasOwn(ep.num) && (
+                    <button className="btn danger small" disabled={busy}
+                      onClick={() => setConfirm({
+                        text: `Remove this league's episode ${ep.num} results?`,
+                        yes: "Remove",
+                        run: () => run(() => supabase.from("league_results").delete().eq("league_id", league.id).eq("num", ep.num), `Episode ${ep.num} results removed.`),
+                      })}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+              )}
             </article>
           ))}
         </div>
       ) : (
-        <div className="empty"><b>No results yet</b><span>Results are added automatically after each episode airs, and everyone&apos;s points update.</span></div>
+        <div className="empty"><b>No results yet</b><span>Results go up after each episode airs, and everyone&apos;s points update.</span></div>
       )}
     </section>
   );

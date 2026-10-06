@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { getUser } from "@/lib/supabase/server";
+import { adminViewOn } from "@/lib/viewMode";
+import ViewToggle from "@/components/ViewToggle";
 
 export const metadata: Metadata = {
   title: { default: "Draft the Cast", template: "%s | Draft the Cast" },
@@ -24,6 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let name = "";
   let avatar: string | null = null;
   let admin = false;
+  let adminView = false;
   if (user) {
     const [{ data: profile }, { data: adminRow }] = await Promise.all([
       supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle(),
@@ -32,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     name = profile?.display_name ?? user.email ?? "";
     avatar = profile?.avatar_url ?? null;
     admin = !!adminRow;
+    adminView = await adminViewOn(admin);
   }
 
   return (
@@ -53,9 +57,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
             {user && (
               <nav aria-label="Account">
-                {admin && (
+                {admin && <ViewToggle adminView={adminView} />}
+                {adminView && (
                   <Link href="/admin" className="linkbtn">
-                    Enter results
+                    Admin
                   </Link>
                 )}
                 {avatar ? (

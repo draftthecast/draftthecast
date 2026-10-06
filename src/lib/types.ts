@@ -29,6 +29,8 @@ export interface Episode {
   winner: string | null;
   bonus: Record<string, number>;
   notes: string | null;
+  /** Set when these results come from the league's own entry rather than the site-wide results. */
+  fromLeague?: boolean;
 }
 
 export interface Season {
@@ -84,3 +86,10 @@ export interface Profile {
 }
 
 export type FlagKey = "mvp" | "nominated" | "ejected" | "eliminated" | "quit" | "switched" | "black_jacket" | "final2";
+
+/** A league commissioner's own results for one episode. Takes priority over the site-wide episode results. */
+export interface LeagueResult extends Omit<Episode, "season_id" | "title" | "air_at"> {
+  league_id: string;
+  updated_by: string | null;
+  updated_at: string;
+}

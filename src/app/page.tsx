@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getUser } from "@/lib/supabase/server";
+import { adminViewOn, isAdmin } from "@/lib/viewMode";
 import SignInButton from "@/components/SignInButton";
 import { CreateLeague, JoinWithCode } from "@/components/HomeForms";
 
@@ -42,14 +43,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     );
   }
 
-  const [{ data: leagues }, { data: seasons }] = await Promise.all([
+  const adminView = await adminViewOn(await isAdmin(supabase, user.id));
+  const [{ data: leagues }, { data: seasons }, { data: allLeagues }] = await Promise.all([
     supabase
       .from("leagues")
       .select("id, name, season_id, draft_status, seasons(title), league_members!inner(user_id)")
       .eq("league_members.user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase.from("seasons").select("id, title").eq("active", true).order("created_at"),
+    adminView
+      ? supabase.from("leagues").select("id, name, draft_status, seasons(title), league_members(count)").order("created_at", { ascending: false })
+      : Promise.resolve({ data: null }),
   ]);
+  const mineIds = new Set((leagues ?? []).map((l) => l.id));
+  const others = (allLeagues ?? []).filter((l) => !mineIds.has(l.id));
 
   return (
     <main className="section" style={{ gap: 28 }}>
@@ -77,6 +84,23 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           </div>
         )}
       </section>
+      {adminView && others.length > 0 && (
+        <section className="section">
+          <div className="sechead">
+            <h2>Other leagues</h2>
+            <span className="soft small">Only you see these, because you&apos;re the site admin</span>
+          </div>
+          <div className="cards">
+            {others.map((l) => (
+              <Link key={l.id} href={`/league/${l.id}`} className="leaguecard">
+                <b>{l.name}</b>
+                <span className="soft small">{(l.seasons as unknown as { title: string } | null)?.title ?? ""}</span>
+                <span className="small">{(l.league_members as unknown as { count: number }[])?.[0]?.count ?? 0} teams</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       <div className="grid2">
         <CreateLeague seasons={seasons ?? []} />
         <JoinWithCode />
