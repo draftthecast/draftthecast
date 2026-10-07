@@ -4,7 +4,7 @@ import { getUser } from "@/lib/supabase/server";
 import { adminViewOn, isAdmin } from "@/lib/viewMode";
 import LeagueApp from "./LeagueApp";
 
-export const metadata: Metadata = { title: "League" };
+export const metadata: Metadata = { title: "League", robots: { index: false, follow: false } };
 
 export default async function LeaguePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

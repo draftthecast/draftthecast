@@ -4,11 +4,34 @@ import "./globals.css";
 import { getUser } from "@/lib/supabase/server";
 import { adminViewOn } from "@/lib/viewMode";
 import ViewToggle from "@/components/ViewToggle";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: { default: "Draft the Cast", template: "%s | Draft the Cast" },
-  description: "Fantasy leagues for reality TV. Draft the cast, guess who goes home, and beat your friends.",
-  metadataBase: new URL("https://draftthecast.com"),
+  title: { default: `${SITE.name}: ${SITE.tagline}`, template: `%s | ${SITE.name}` },
+  description: SITE.description,
+  metadataBase: new URL(SITE.url),
+  applicationName: SITE.name,
+  keywords: ["fantasy reality TV", "Hell's Kitchen fantasy league", "Hell's Kitchen Season 25", "reality TV draft", "fantasy league with friends"],
+  openGraph: { type: "website", siteName: SITE.name, url: SITE.url, title: `${SITE.name}: ${SITE.tagline}`, description: SITE.description, locale: "en_US" },
+  twitter: { card: "summary_large_image", title: `${SITE.name}: ${SITE.tagline}`, description: SITE.description },
+};
+
+// Tells search engines and AI tools what the site is.
+const siteLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", "@id": `${SITE.url}/#website`, name: SITE.name, url: SITE.url, description: SITE.description },
+    {
+      "@type": "WebApplication",
+      name: SITE.name,
+      url: SITE.url,
+      applicationCategory: "GameApplication",
+      operatingSystem: "Web",
+      description: SITE.description,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      isAccessibleForFree: true,
+    },
+  ],
 };
 
 export const viewport: Viewport = {
@@ -49,6 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteLd).replace(/</g, "\\u003c") }} />
         <div className="wrap">
           <header className="site">
             <Link href="/" className="wordmark">
@@ -79,7 +103,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <footer>
             A fan-made fantasy game. Not affiliated with FOX, Hell&apos;s Kitchen or any network.{" "}
-            <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
+            <Link href="/how-to-play">How to play</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
           </footer>
         </div>
       </body>

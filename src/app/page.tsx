@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getUser } from "@/lib/supabase/server";
 import { adminViewOn, isAdmin } from "@/lib/viewMode";
 import SignInButton from "@/components/SignInButton";
 import { CreateLeague, JoinWithCode } from "@/components/HomeForms";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ signin?: string; reason?: string }> }) {
   const { signin, reason } = await searchParams;

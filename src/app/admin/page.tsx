@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/lib/supabase/server";
 import AdminResults from "./AdminResults";
 
-export const metadata: Metadata = { title: "Enter results" };
+export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
 export default async function AdminPage() {
   const { supabase, user } = await getUser();

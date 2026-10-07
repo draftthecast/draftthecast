@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getUser } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import SignInButton from "@/components/SignInButton";
 import JoinForm from "./JoinForm";
 
-export const metadata: Metadata = { title: "Join a league" };
+// Invite pages stay out of search results; shared links still get a "Join <league>" preview card.
+export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
+  const { code } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("league_preview", { p_code: code });
+  const league = (data as { name: string; season_title: string }[] | null)?.[0];
+  const title = league ? `Join ${league.name}` : "Join a league";
+  const description = league ? `You're invited to ${league.name}, a ${league.season_title} fantasy league on Draft the Cast.` : "Join a fantasy league on Draft the Cast.";
+  return { title, description, robots: { index: false, follow: false }, openGraph: { title, description }, twitter: { title, description } };
+}
 
 export default async function JoinPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
