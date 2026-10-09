@@ -84,7 +84,9 @@ const res = await fetch(`${url.replace(/\/$/, "")}/rest/v1/episodes?on_conflict=
   method: "POST",
   headers: {
     apikey: key,
-    Authorization: `Bearer ${key}`,
+    // Legacy service_role keys are JWTs and go in Authorization too.
+    // Newer secret keys (sb_secret_...) are not JWTs and work from apikey alone.
+    ...(key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}),
     "Content-Type": "application/json",
     Prefer: "resolution=merge-duplicates,return=minimal",
   },
