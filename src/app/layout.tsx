@@ -5,6 +5,7 @@ import { getUser } from "@/lib/supabase/server";
 import { adminViewOn } from "@/lib/viewMode";
 import ViewToggle from "@/components/ViewToggle";
 import { SITE } from "@/lib/site";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: { default: `${SITE.name}: ${SITE.tagline}`, template: `%s | ${SITE.name}` },
@@ -106,6 +107,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Link href="/how-to-play">How to play</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
           </footer>
         </div>
+        <Analytics />
       </body>
     </html>
   );

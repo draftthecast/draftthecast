@@ -6,7 +6,7 @@ export default function Privacy() {
   return (
     <main className="prose-page">
       <h1>Privacy</h1>
-      <p className="soft">Last updated October 4, 2026</p>
+      <p className="soft">Last updated October 15, 2026</p>
       <p>Draft the Cast is a free fantasy game for reality TV fans. This page explains what we collect and why.</p>
       <h2>What we collect</h2>
       <ul>
@@ -22,7 +22,7 @@ export default function Privacy() {
       <ul>
         <li>Google, to sign you in.</li>
         <li>Supabase, which stores the league data.</li>
-        <li>Vercel, which hosts the site.</li>
+        <li>Vercel, which hosts the site and counts page visits with Vercel Web Analytics. It doesn&apos;t use cookies or track you across other sites.</li>
       </ul>
       <h2>Deleting your data</h2>
       <p>Email draftthecast@gmail.com and we&apos;ll delete your account and everything tied to it.</p>
