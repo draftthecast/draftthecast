@@ -3,21 +3,22 @@
   "title": "Hell's Kitchen University",
   "air_at": "2026-10-15T20:00:00-04:00",
   "posted": false,
-  "challenge_win": null,
-  "service_win": null,
-  "mvp": [],
-  "nominated": [],
+  "challenge_win": "red",
+  "service_win": "blue",
+  "mvp": ["georgiana"],
+  "nominated": ["jeyda", "haley"],
   "ejected": [],
-  "eliminated": [],
+  "eliminated": ["jeyda"],
   "quit": [],
   "switched": [],
   "black_jacket": [],
   "final2": [],
   "winner": null,
   "bonus": {},
-  "notes": "Aired Oct 15. Held as a draft: as of the morning of Oct 16 the only detailed recap found was Gold Derby's (also syndicated on Yahoo), and it could not be read, so the challenge, service and elimination are not yet confirmed by two sources. Results left empty until a second recap is available.",
+  "notes": "Still held as a draft (checked Oct 17): only one independent detailed recap exists, Gold Derby's, also carried by Yahoo and copied on Bing Chef, so who went home isn't confirmed by two sources yet. That recap says Red won the beer-pong challenge 7-6 when Georgiana beat Jonny in the deciding round, Ramsay ended Red's dinner service early, Mya named herself and Jeyda but Ramsay swapped Mya for Haley, and Jeyda went home. Tonboriday's 'episode 4' recap actually describes episode 3, so it was not used.",
   "sources": [
     "https://www.goldderby.com/reality-tv/2026/hells-kitchen-season-25-episode-4-recap/",
-    "https://www.tvguide.com/tvshows/hells-kitchen/episodes/1030322625/"
+    "https://www.yahoo.com/entertainment/tv/articles/hell-kitchen-recap-chefs-schooled-010000090.html",
+    "https://www.bingchef.com/86093/hells-kitchen-season-25-episode-4-recap-hells-kitchen-university/"
   ]
 }
