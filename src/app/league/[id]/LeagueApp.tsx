@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ResultsEditor, { draftFromEpisode, draftToRow, emptyDraft, type ResultsDraft } from "@/components/ResultsEditor";
 import { createClient } from "@/lib/supabase/client";
-import { PTS, chefStates, draftInfo, effectiveEpisodes, isLocked, nextEpisode, standings, type ChefState, type DraftInfo } from "@/lib/scoring";
+import { chefStates, draftInfo, effectiveEpisodes, eventIds, isLocked, nextEpisode, outIds, standings, winnerIds, type ChefState, type DraftInfo } from "@/lib/scoring";
+import { cap, showByKey, type ShowDef } from "@/lib/shows";
+import ScoringTable from "@/components/ScoringTable";
 import type { Contestant, Episode, Guess, League, LeagueResult, Member, Pick, Profile, Season } from "@/lib/types";
 
 type Tab = "standings" | "draft" | "guess" | "chefs" | "results" | "rules" | "commish";
@@ -11,7 +13,7 @@ const TABS: [Tab, string][] = [
   ["standings", "Standings"],
   ["draft", "Draft"],
   ["guess", "Weekly guess"],
-  ["chefs", "Chefs"],
+  ["chefs", "Cast"],
   ["results", "Results"],
   ["rules", "How to play"],
   ["commish", "Commissioner"],
@@ -139,8 +141,9 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
   if (!data) return <div className="empty"><span>Loading your league…</span></div>;
 
   const { league, members, picks, guesses, contestants, episodes, profiles } = data;
+  const show = showByKey(data.season?.show_key);
   const CHEF = Object.fromEntries(contestants.map((c) => [c.id, c]));
-  const st = chefStates(contestants, episodes, league.start_episode);
+  const st = chefStates(show, contestants, episodes, league.start_episode);
   const me = members.find((m) => m.user_id === userId) ?? null;
   const isCommish = isSiteAdmin || me?.role === "commissioner";
   const acting: Member | null = (isCommish && actAs ? members.find((m) => m.id === actAs) : undefined) ?? me;
@@ -154,15 +157,15 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
     m.user_id ? profiles[m.user_id]?.display_name ?? "League member" : m.manager_name || "Added by commissioner";
   const first = (cid: string) => (CHEF[cid]?.name ?? "").split(" ")[0];
   const active = contestants.filter((c) => st[c.id]?.out === null);
-  const tabs = TABS.filter(([k]) => k !== "commish" || isCommish);
+  const tabs = TABS.filter(([k]) => k !== "commish" || isCommish).map(([k, l]): [Tab, string] => [k, k === "chefs" ? cap(show.noun.many) : l]);
 
   const chip = (cid: string, withPts = false) => {
     const c = CHEF[cid];
     const s: ChefState | undefined = st[cid];
     if (!c || !s) return null;
-    const cls = s.winner ? "win" : s.out !== null ? "out" : s.jacket ? "jacket" : s.team;
+    const cls = s.winner ? "win" : s.out !== null ? "out" : s.jacket ? "jacket" : s.traitor ? "traitor" : s.team ?? "plain";
     return (
-      <span key={cid} className={`chip ${cls}`} title={`${c.name}${s.out !== null ? `, sent home in episode ${s.out}` : ""}`}>
+      <span key={cid} className={`chip ${cls}`} title={`${c.name}${s.traitor ? ", Traitor" : ""}${s.out !== null ? `, out in episode ${s.out}` : ""}`}>
         {first(cid)}
         {withPts && <span className="p num">{s.pts} pts</span>}
       </span>
@@ -185,7 +188,7 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
   );
 
   const x: Ctx = {
-    league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d,
+    show, league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d,
     nextEp, locked, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab,
     leagueResults: data.leagueResults, reload: load,
   };
@@ -206,7 +209,7 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
             {nextEp ? (nextEp.air_at ? `Episode ${nextEp.num} airs ${fmtDate(nextEp.air_at)} at ${fmtTime(nextEp.air_at)}` : `Episode ${nextEp.num} is next`) : "Season complete"}
           </div>
           <div className="facts">
-            <span>{active.length} of {contestants.length} chefs still in</span>
+            <span>{active.length} of {contestants.length} {show.noun.many} still in</span>
             <span>Points count from episode {league.start_episode}</span>
             {data.season?.network && <span>On {data.season.network}</span>}
           </div>
@@ -232,7 +235,7 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
 }
 
 interface Ctx {
-  league: League; members: Member[]; picks: Pick[]; guesses: Guess[]; contestants: Contestant[]; episodes: Episode[];
+  show: ShowDef; league: League; members: Member[]; picks: Pick[]; guesses: Guess[]; contestants: Contestant[]; episodes: Episode[];
   profiles: Record<string, Profile>; CHEF: Record<string, Contestant>; st: Record<string, ChefState>;
   me: Member | null; isCommish: boolean; isSiteAdmin: boolean; acting: Member | null; d: DraftInfo;
   nextEp: Episode | null; locked: boolean; posted: Episode[]; lastNum: number;
@@ -252,7 +255,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
     return <><b>You&apos;re up in the draft</b><span className="small soft">Pick {d.pickCount + 1} of {d.total}.</span><button className="btn sun" onClick={() => setTab("draft")}>Make your pick</button></>;
   const myCount = picks.filter((p) => p.member_id === me?.id).length;
   if (league.draft_status === "open" && league.mode === "open" && me && myCount < league.roster_size)
-    return <><b>Pick your chefs</b><span className="small soft">{myCount} of {league.roster_size} chosen.</span><button className="btn sun" onClick={() => setTab("draft")}>Go to the draft</button></>;
+    return <><b>Pick your {x.show.noun.many}</b><span className="small soft">{myCount} of {league.roster_size} chosen.</span><button className="btn sun" onClick={() => setTab("draft")}>Go to the draft</button></>;
   if (league.draft_status === "setup")
     return <><b>Draft opens soon</b><span className="small soft">{isCommish ? "Share the invite link, then open the draft from the Commissioner tab." : "The commissioner will open it once everyone has joined."}</span>{isCommish && <button className="btn ghost small" onClick={() => setTab("commish")}>Get the invite link</button>}</>;
   if (league.draft_status === "open" && league.mode === "snake" && d.turn)
@@ -260,7 +263,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
   if (!nextEp) return <><b>The season is over</b><span className="small soft">Check the final standings below.</span></>;
   const mine = me && guesses.find((g) => g.member_id === me.id && g.episode_num === nextEp.num);
   if (!locked && me && !mine)
-    return <><b>Who goes home in episode {nextEp.num}?</b><span className="small soft">A correct guess is worth {PTS.guess} points.</span><button className="btn sun" onClick={() => setTab("guess")}>Make your guess</button></>;
+    return <><b>{x.show.guessQuestion(nextEp.num)}</b><span className="small soft">A correct guess is worth {x.show.guessPts} points.</span><button className="btn sun" onClick={() => setTab("guess")}>Make your guess</button></>;
   if (mine) return <><b>You&apos;re set for episode {nextEp.num}</b><span className="small soft">Your guess: {CHEF[mine.contestant_id]?.name}.</span></>;
   return <><b>Guesses are locked</b><span className="small soft">Results go up after the episode airs.</span></>;
 }
@@ -268,7 +271,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
 /* ---------- standings ---------- */
 function Standings({ x }: { x: Ctx }) {
 const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d, nextEp, locked, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab } = x;
-  const rows = standings(league, members, picks, guesses, episodes, st);
+  const rows = standings(x.show, league, members, picks, guesses, episodes, st);
   const scored = lastNum >= league.start_episode;
   const [rename, setRename] = useState(me?.team_name ?? "");
   return (
@@ -290,7 +293,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
                 </div>
               </div>
               <div className="chips">
-                {r.roster.length ? r.roster.map((cid) => chip(cid, true)) : <span className="soft small">No chefs yet</span>}
+                {r.roster.length ? r.roster.map((cid) => chip(cid, true)) : <span className="soft small">No {x.show.noun.many} yet</span>}
                 {r.guessPts > 0 && <span className="chip plain">Guesses {r.guessPts} pts</span>}
                 {r.winnerPts > 0 && <span className="chip win">Called the winner {r.winnerPts} pts</span>}
               </div>
@@ -302,7 +305,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
           </div>
         ))}
       </div>
-      <p className="soft small">Crossed-out chefs have been sent home. Their points stay on your total. Ties go to whoever has more correct weekly guesses.</p>
+      <p className="soft small">Crossed-out {x.show.noun.many} are out of the game. Their points stay on your total. Ties go to whoever has more correct weekly guesses.</p>
       {me && (
         <form
           className="row"
@@ -336,7 +339,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
   const owners: Record<string, string[]> = {};
   for (const p of picks) (owners[p.contestant_id] ??= []).push(p.member_id);
   const sorted = [...contestants].sort(
-    (a, b) => Number(st[a.id].out !== null) - Number(st[b.id].out !== null) || a.team.localeCompare(b.team) || a.name.localeCompare(b.name),
+    (a, b) => Number(st[a.id].out !== null) - Number(st[b.id].out !== null) || (a.team ?? "").localeCompare(b.team ?? "") || a.name.localeCompare(b.name),
   );
   let head;
   if (league.draft_status === "setup")
@@ -346,7 +349,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
   else if (league.mode === "snake")
     head = <div className="note sun"><span>Pick {d.pickCount + 1} of {d.total}: <b>{teamName(d.turn)}</b>{d.turn === me?.id ? " (that's you)" : ""} is choosing.</span></div>;
   else
-    head = <div className="note sun"><span>Choose {league.roster_size} chefs. Other teams can pick the same chefs.</span>{acting && <b className="num">{myRoster.length} of {league.roster_size} chosen</b>}</div>;
+    head = <div className="note sun"><span>Choose {league.roster_size} {x.show.noun.many}. Other teams can pick the same {x.show.noun.many}.</span>{acting && <b className="num">{myRoster.length} of {league.roster_size} chosen</b>}</div>;
   return (
     <section className="section">
       <h2>Draft</h2>
@@ -375,10 +378,10 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
           return (
             <div key={c.id} className={`pick ${taken || s.out !== null ? "taken" : ""}`}>
               <div className="who">
-                <span className={`swatch ${s.out !== null ? "" : s.team}`} />
+                <span className={`swatch ${s.out !== null ? "" : s.team ?? ""}`} />
                 <div style={{ minWidth: 0 }}>
                   <div className="nm">{c.name}</div>
-                  <div className="sub">{s.out !== null ? `Sent home in episode ${s.out}` : who ? `On ${who}` : `${s.team === "red" ? "Red" : "Blue"} team, ${c.age}`}</div>
+                  <div className="sub">{s.out !== null ? `${x.show.outWord} in episode ${s.out}` : who ? `On ${who}` : s.team ? `${s.team === "red" ? "Red" : "Blue"} team, ${c.age}` : [c.age, c.hometown].filter(Boolean).join(", ")}</div>
                 </div>
               </div>
               {mine && open && league.mode === "open" ? (
@@ -422,23 +425,23 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
   const winnerLocked = episodes.some((e) => e.num >= league.start_episode && isLocked(e));
   const history = posted.filter((e) => e.num >= league.start_episode).reverse();
   const opts = active.map((c) => (
-    <option key={c.id} value={c.id}>{c.name} ({st[c.id].team === "red" ? "Red" : "Blue"})</option>
+    <option key={c.id} value={c.id}>{c.name}{st[c.id].team ? ` (${st[c.id].team === "red" ? "Red" : "Blue"})` : ""}</option>
   ));
   return (
     <section className="section">
       <h2>Weekly guess</h2>
       <p className="soft">
-        Before each episode, guess who Chef Ramsay sends home. A correct guess earns {PTS.guess} points. If two chefs go home, either one counts.
+        {x.show.guessRule} A correct guess earns {x.show.guessPts} points.
         Guesses lock automatically when the episode starts{nextEp?.air_at ? ` (${fmtDate(nextEp.air_at)} at ${fmtTime(nextEp.air_at)} Eastern)` : ""}.
       </p>
       {pickFor}
       <div className="grid2">
         <div className="panel">
-          <h3>{n ? `Who goes home in episode ${n}?` : "No episodes left"}</h3>
+          <h3>{n ? x.show.guessQuestion(n) : "No episodes left"}</h3>
           {acting && n ? (
             <>
-              <select id="guess-pick" value={pick} disabled={locked} onChange={(e) => setPick(e.target.value)} aria-label="Chef going home">
-                <option value="">Choose a chef</option>
+              <select id="guess-pick" value={pick} disabled={locked} onChange={(e) => setPick(e.target.value)} aria-label="Who's out">
+                <option value="">Choose a {x.show.noun.one}</option>
                 {opts}
               </select>
               <button className="btn brand" disabled={locked || busy || !pick}
@@ -450,11 +453,11 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
         </div>
         <div className="panel">
           <h3>Who wins the season?</h3>
-          <span className="soft small">Worth {PTS.winnerPick} points at the finale. Locks when scoring starts.</span>
+          <span className="soft small">Worth {x.show.winnerPickPts} points at the finale. Locks when scoring starts.</span>
           {acting ? (
             <>
               <select id="winner-pick" value={winner} disabled={winnerLocked} onChange={(e) => setWinner(e.target.value)} aria-label="Season winner">
-                <option value="">Choose a chef</option>
+                <option value="">Choose a {x.show.noun.one}</option>
                 {opts}
               </select>
               <button className="btn ghost" disabled={winnerLocked || busy || !winner}
@@ -487,16 +490,16 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
           <h3>Past guesses</h3>
           <div className="table list calls">
             {history.map((ep) => {
-              const gone = [...ep.eliminated, ...ep.quit];
+              const gone = outIds(x.show, ep);
               return (
                 <div key={ep.num} className="it">
-                  <span><b>Episode {ep.num}</b> <span className="soft">{gone.length ? `${gone.map(first).join(" and ")} went home` : "nobody went home"}</span></span>
+                  <span><b>Episode {ep.num}</b> <span className="soft">{gone.length ? `${gone.map(first).join(" and ")} ${gone.length > 1 ? "were" : "was"} out` : "nobody left"}</span></span>
                   <span className="chips">
                     {members.map((m) => {
                       const g = guesses.find((x) => x.member_id === m.id && x.episode_num === ep.num);
                       if (!g) return null;
                       const hit = gone.includes(g.contestant_id);
-                      return <span key={m.id} className={`chip ${hit ? "win" : "plain"}`}>{m.team_name}: {first(g.contestant_id)}{hit ? ` +${PTS.guess}` : ""}</span>;
+                      return <span key={m.id} className={`chip ${hit ? "win" : "plain"}`}>{m.team_name}: {first(g.contestant_id)}{hit ? ` +${x.show.guessPts}` : ""}</span>;
                     })}
                   </span>
                 </div>
@@ -509,9 +512,9 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
   );
 }
 
-/* ---------- chefs ---------- */
+/* ---------- cast ---------- */
 function Chefs({ x }: { x: Ctx }) {
-const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d, nextEp, locked, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab } = x;
+  const { show, league, picks, contestants, st, teamName, active } = x;
   const owners: Record<string, string[]> = {};
   for (const p of picks) (owners[p.contestant_id] ??= []).push(teamName(p.member_id));
   const card = (c: Contestant) => {
@@ -520,10 +523,13 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
       <div key={c.id} className={`chef ${s.out !== null ? "is-out" : ""}`}>
         <div style={{ minWidth: 0 }}>
           <div className="nm">
-            {c.name} {s.winner ? <span className="chip win">Winner</span> : s.jacket && s.out === null ? <span className="chip jacket">Black jacket</span> : null}
+            {c.name}{" "}
+            {s.winner ? <span className="chip win">Winner</span>
+              : s.jacket && s.out === null ? <span className="chip jacket">Black jacket</span>
+              : s.traitor ? <span className="chip traitor">Traitor</span> : null}
           </div>
           <div className="meta">
-            {s.out !== null ? `Sent home in episode ${s.out}. ` : ""}
+            {s.out !== null ? `${show.outWord} in episode ${s.out}. ` : ""}
             {owners[c.id]?.length ? `Drafted by ${owners[c.id].join(", ")}` : "Not drafted"}
           </div>
         </div>
@@ -548,23 +554,33 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
       </div>
     );
   };
-  const by = (t: string) => active.filter((c) => st[c.id].team === t).sort((a, b) => st[b.id].pts - st[a.id].pts || a.name.localeCompare(b.name));
+  const rank = (a: Contestant, b: Contestant) => st[b.id].pts - st[a.id].pts || a.name.localeCompare(b.name);
+  const by = (t: string) => active.filter((c) => st[c.id].team === t).sort(rank);
   const out = contestants.filter((c) => st[c.id].out !== null).sort((a, b) => (st[b.id].out ?? 0) - (st[a.id].out ?? 0));
   return (
     <section className="section">
-      <h2>Chefs</h2>
-      <p className="soft">Ranked by points within each team. Episodes before {league.start_episode} show in each chef&apos;s history but don&apos;t count.</p>
-      <div className="teams">
-        {(["red", "blue"] as const).map((t) => (
-          <div key={t} className="teamcol">
-            <div className={`kitchen ${t}`}><h3>{t === "red" ? "Red team" : "Blue team"}</h3><span className="small num">{by(t).length} left</span></div>
-            {by(t).map(card)}
-          </div>
-        ))}
-      </div>
+      <h2>{cap(show.noun.many)}</h2>
+      <p className="soft">
+        Ranked by points{show.teams ? " within each team" : ""}. Episodes before {league.start_episode} show in each {show.noun.one}&apos;s history but don&apos;t count.
+      </p>
+      {show.teams ? (
+        <div className="teams">
+          {(["red", "blue"] as const).map((t) => (
+            <div key={t} className="teamcol">
+              <div className={`kitchen ${t}`}><h3>{t === "red" ? "Red team" : "Blue team"}</h3><span className="small num">{by(t).length} left</span></div>
+              {by(t).map(card)}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="teamcol">
+          <div className="kitchen plain"><h3>Still in the game</h3><span className="small num">{active.length} left</span></div>
+          <div className="teams">{[...active].sort(rank).map(card)}</div>
+        </div>
+      )}
       {out.length > 0 && (
         <div className="teamcol">
-          <div className="kitchen gone"><h3>Sent home</h3><span className="small num">{out.length}</span></div>
+          <div className="kitchen gone"><h3>{show.teams ? "Sent home" : "Out of the game"}</h3><span className="small num">{out.length}</span></div>
           <div className="teams">{out.map(card)}</div>
         </div>
       )}
@@ -574,19 +590,19 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
 
 /* ---------- results ---------- */
 function Results({ x }: { x: Ctx }) {
-  const { league, contestants, episodes, CHEF, isCommish, isSiteAdmin, nextEp, posted, run, busy, supabase, flash, setConfirm, leagueResults, reload } = x;
+  const { show, league, contestants, episodes, CHEF, isCommish, isSiteAdmin, nextEp, posted, run, busy, supabase, flash, setConfirm, leagueResults, reload } = x;
   const [edit, setEdit] = useState<ResultsDraft | null>(null);
   const names = (ids: string[]) => ids.map((id) => CHEF[id]?.name ?? id).join(", ");
   const teamWord = (v: Episode["challenge_win"]) =>
     v === "red" ? <span className="chip red">Red team</span> : v === "blue" ? <span className="chip blue">Blue team</span> : v === "both" ? <span className="chip plain">Both teams</span> : null;
-  const line = (k: string, v: React.ReactNode) => (v && (typeof v !== "string" || v.length) ? <><dt>{k}</dt><dd>{v}</dd></> : null);
+  const line = (k: string, v: React.ReactNode) => (v && (typeof v !== "string" || v.length) ? <React.Fragment key={k}><dt>{k}</dt><dd>{v}</dd></React.Fragment> : null);
   const hasOwn = (num: number) => leagueResults.some((r) => r.num === num);
   const aired = !!nextEp && (!nextEp.air_at || new Date(nextEp.air_at).getTime() <= Date.now());
 
   async function save(dr: ResultsDraft): Promise<string | null> {
-    const row = { ...draftToRow(dr, contestants), posted: true, league_id: league.id, num: dr.num, updated_at: new Date().toISOString() };
+    const row = { ...draftToRow(show, dr, contestants), posted: true, league_id: league.id, num: dr.num, updated_at: new Date().toISOString() };
     const { error } = await supabase.from("league_results").upsert(row, { onConflict: "league_id,num" });
-    if (error) return error.message.includes("league_results") ? "Results entry isn't switched on yet. Ask the site admin to run the latest database update." : error.message;
+    if (error) return error.message.includes("league_results") || error.message.includes("events") ? "Results entry isn't switched on yet. Ask the site admin to run the latest database update." : error.message;
     setEdit(null);
     flash(`Episode ${dr.num} results saved. Standings are updated.`);
     reload();
@@ -596,6 +612,7 @@ function Results({ x }: { x: Ctx }) {
   if (edit) {
     return (
       <ResultsEditor
+        show={show}
         initial={edit}
         contestants={contestants}
         episodes={episodes}
@@ -623,48 +640,47 @@ function Results({ x }: { x: Ctx }) {
       <p className="soft small">
         {isCommish
           ? "After each episode airs, add what happened and everyone's points update. What you enter counts for this league only."
-          : "Your commissioner adds results after each episode airs, and everyone's points update."}
+          : "Results go up after each episode airs, and everyone's points update."}
       </p>
       {posted.length ? (
         <div className="results">
-          {[...posted].reverse().map((ep) => (
-            <article key={ep.num} className="ep">
-              <div className="ephead">
-                <h3>Episode {ep.num}{ep.title ? `: ${ep.title}` : ""}</h3>
-                <span className="when">
-                  {fmtDate(ep.air_at)} {ep.num < league.start_episode && <span className="badge">before scoring</span>}
-                </span>
-              </div>
-              <dl>
-                {line("Sent home", names([...ep.eliminated, ...ep.quit]))}
-                {line("Up for elimination", names(ep.nominated))}
-                {line("Won the challenge", teamWord(ep.challenge_win))}
-                {line("Won dinner service", teamWord(ep.service_win))}
-                {line("Standouts", names(ep.mvp))}
-                {line("Kicked out of service", names(ep.ejected))}
-                {line("Switched teams", names(ep.switched))}
-                {line("Black jackets", names(ep.black_jacket))}
-                {line("Final 2", names(ep.final2))}
-                {line("Winner", ep.winner ? CHEF[ep.winner]?.name : "")}
-              </dl>
-              {ep.notes && <p className="soft small">{ep.notes}</p>}
-              {isCommish && (
-                <div className="row">
-                  <button className="btn ghost small" disabled={busy} onClick={() => setEdit(draftFromEpisode(ep))}>Edit</button>
-                  {hasOwn(ep.num) && (
-                    <button className="btn danger small" disabled={busy}
-                      onClick={() => setConfirm({
-                        text: `Remove this league's episode ${ep.num} results?`,
-                        yes: "Remove",
-                        run: () => run(() => supabase.from("league_results").delete().eq("league_id", league.id).eq("num", ep.num), `Episode ${ep.num} results removed.`),
-                      })}>
-                      Remove
-                    </button>
-                  )}
+          {[...posted].reverse().map((ep) => {
+            const outs = show.events.filter((e) => e.out);
+            const rest = show.events.filter((e) => !e.out && e.key !== "winners");
+            const won = winnerIds(ep);
+            return (
+              <article key={ep.num} className="ep">
+                <div className="ephead">
+                  <h3>Episode {ep.num}{ep.title ? `: ${ep.title}` : ""}</h3>
+                  <span className="when">
+                    {fmtDate(ep.air_at)} {ep.num < league.start_episode && <span className="badge">before scoring</span>}
+                  </span>
                 </div>
-              )}
-            </article>
-          ))}
+                <dl>
+                  {outs.map((e) => line(e.label, names(eventIds(ep, e.key))))}
+                  {show.teamResults.map((t) => line(t.scored.replace(/^Team w/, "W"), teamWord(ep[t.key])))}
+                  {rest.map((e) => line(e.label, names(eventIds(ep, e.key))))}
+                  {line(won.length > 1 ? "Winners" : "Winner", names(won))}
+                </dl>
+                {ep.notes && <p className="soft small">{ep.notes}</p>}
+                {isCommish && (
+                  <div className="row">
+                    <button className="btn ghost small" disabled={busy} onClick={() => setEdit(draftFromEpisode(show, ep))}>Edit</button>
+                    {hasOwn(ep.num) && (
+                      <button className="btn danger small" disabled={busy}
+                        onClick={() => setConfirm({
+                          text: `Remove this league's episode ${ep.num} results?`,
+                          yes: "Remove",
+                          run: () => run(() => supabase.from("league_results").delete().eq("league_id", league.id).eq("num", ep.num), `Episode ${ep.num} results removed.`),
+                        })}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="empty"><b>No results yet</b><span>Results go up after each episode airs, and everyone&apos;s points update.</span></div>
@@ -675,25 +691,18 @@ function Results({ x }: { x: Ctx }) {
 
 /* ---------- how to play ---------- */
 function Rules({ x }: { x: Ctx }) {
-const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d, nextEp, locked, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab } = x;
-  const l = (t: string, p: number) => <div className="l" key={t}><span>{t}</span><b className={p > 0 ? "up" : "down"}>{sign(p)}</b></div>;
+  const { show, league } = x;
   return (
     <section className="section">
       <h2>How to play</h2>
       <ol className="steps">
         <li><h3>Join</h3><span className="soft">Open the invite link and name your team.</span></li>
-        <li><h3>Draft</h3><span className="soft">{league.mode === "snake" ? `Take turns picking ${league.roster_size} chefs. Each chef can only be on one team.` : `Pick ${league.roster_size} chefs. Friends can pick the same ones.`}</span></li>
-        <li><h3>Score</h3><span className="soft">Your chefs earn points every episode from episode {league.start_episode} on. Most points at the finale wins.</span></li>
+        <li><h3>Draft</h3><span className="soft">{league.mode === "snake" ? `Take turns picking ${league.roster_size} ${show.noun.many}. Each ${show.noun.one} can only be on one team.` : `Pick ${league.roster_size} ${show.noun.many}. Friends can pick the same ones.`}</span></li>
+        <li><h3>Score</h3><span className="soft">Your {show.noun.many} earn points every episode from episode {league.start_episode} on. Most points at the finale wins.</span></li>
       </ol>
-      <div className="ptsgrid">
-        <div className="ptlist"><h3>Each episode</h3>{l("Stays in the competition", PTS.survive)}{l("Their team wins the challenge", PTS.challenge)}{l("Their team wins dinner service", PTS.service)}{l("Standout of the night (best dish, challenge win, punishment pass)", PTS.mvp)}</div>
-        <div className="ptlist"><h3>Elimination</h3>{l("Put up for elimination", PTS.nominated)}{l("Survives elimination", PTS.survivedBlock)}{l("Kicked out of dinner service", PTS.ejected)}{l("Sent home", PTS.eliminated)}{l("Quits or leaves for medical reasons", PTS.quit)}{l("Switches teams", PTS.switched)}</div>
-        <div className="ptlist"><h3>End of the season</h3>{l("Earns a black jacket", PTS.blackJacket)}{l("Makes the final 2", PTS.final2)}{l("Wins the season", PTS.winner)}</div>
-        <div className="ptlist"><h3>Your guesses</h3>{l("Correctly guess who goes home", PTS.guess)}{l("Correctly guess the season winner", PTS.winnerPick)}</div>
-      </div>
+      <ScoringTable show={show} />
       <p className="soft small">
-        Being up for elimination costs {Math.abs(PTS.nominated)} points, but surviving it pays {PTS.survivedBlock}, so a chef who keeps escaping still helps you.
-        When a chef goes home, they stop earning but keep the points they made. Ties go to whoever has more correct weekly guesses.
+        {show.scoringNote} When a {show.noun.one} leaves, they stop earning but keep the points they made. Ties go to whoever has more correct weekly guesses.
       </p>
     </section>
   );
@@ -729,11 +738,11 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
           <label className="field">League name<input id="set-name" type="text" maxLength={60} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
           <label className="field">Draft style
             <select id="set-mode" value={form.mode} disabled={league.draft_status !== "setup"} onChange={(e) => setForm({ ...form, mode: e.target.value as League["mode"] })}>
-              <option value="snake">Take turns (each chef once)</option>
-              <option value="open">Free pick (chefs can repeat)</option>
+              <option value="snake">Take turns (each {x.show.noun.one} once)</option>
+              <option value="open">Free pick ({x.show.noun.many} can repeat)</option>
             </select>
           </label>
-          <label className="field">Chefs per team<input id="set-roster" type="number" min={1} max={9} value={form.roster} disabled={league.draft_status !== "setup"} onChange={(e) => setForm({ ...form, roster: Number(e.target.value) })} /></label>
+          <label className="field">{cap(x.show.noun.many)} per team<input id="set-roster" type="number" min={1} max={9} value={form.roster} disabled={league.draft_status !== "setup"} onChange={(e) => setForm({ ...form, roster: Number(e.target.value) })} /></label>
           <label className="field">Points count from episode<input id="set-start" type="number" min={1} max={30} value={form.start} onChange={(e) => setForm({ ...form, start: Number(e.target.value) })} /></label>
         </div>
         <div className="row">

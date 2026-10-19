@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { showByKey } from "@/lib/shows";
 
-export function CreateLeague({ seasons }: { seasons: { id: string; title: string }[] }) {
+export function CreateLeague({ seasons, initial }: { seasons: { id: string; title: string; show_key?: string }[]; initial?: string }) {
   const router = useRouter();
-  const [season, setSeason] = useState(seasons[0]?.id ?? "");
+  const [season, setSeason] = useState(seasons.some((s) => s.id === initial) ? initial! : seasons[0]?.id ?? "");
+  const show = showByKey(seasons.find((s) => s.id === season)?.show_key);
   const [name, setName] = useState("");
   const [team, setTeam] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,7 +33,7 @@ export function CreateLeague({ seasons }: { seasons: { id: string; title: string
   }
 
   return (
-    <form className="panel" onSubmit={submit}>
+    <form className="panel" id="start" onSubmit={submit}>
       <h3>Start a league</h3>
       {seasons.length > 1 && (
         <label className="field">
@@ -51,7 +53,7 @@ export function CreateLeague({ seasons }: { seasons: { id: string; title: string
       </label>
       <label className="field">
         Your team name
-        <input id="create-team" type="text" maxLength={40} placeholder="Lamb Sauce Mafia" value={team} onChange={(e) => setTeam(e.target.value)} />
+        <input id="create-team" type="text" maxLength={40} placeholder={show.teamPlaceholder} value={team} onChange={(e) => setTeam(e.target.value)} />
       </label>
       {error && <span className="error">{error}</span>}
       <div>

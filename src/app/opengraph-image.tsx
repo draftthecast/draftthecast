@@ -6,8 +6,8 @@ export const contentType = "image/png";
 
 export default function Image() {
   return ogCard({
-    kicker: "Now playing: Hell's Kitchen Season 25",
+    kicker: "Now playing: Hell's Kitchen and The Traitors",
     title: "Fantasy leagues for reality TV",
-    subtitle: "Draft the cast, guess who goes home, beat your friends. Free.",
+    subtitle: "Draft the cast, guess who's out, beat your friends. Free.",
   });
 }

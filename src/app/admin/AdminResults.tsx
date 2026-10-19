@@ -3,15 +3,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import ResultsEditor, { draftFromEpisode, draftToRow, emptyDraft, fromEastern, type ResultsDraft } from "@/components/ResultsEditor";
+import { showByKey } from "@/lib/shows";
 import type { Contestant, Episode } from "@/lib/types";
 
-export default function AdminResults({ seasons }: { seasons: { id: string; title: string }[] }) {
+export default function AdminResults({ seasons }: { seasons: { id: string; title: string; show_key?: string }[] }) {
   const supabase = useMemo(() => createClient(), []);
   const [season, setSeason] = useState(seasons[0]?.id ?? "");
   const [contestants, setContestants] = useState<Contestant[]>([]);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [edit, setEdit] = useState<ResultsDraft | null>(null);
   const [msg, setMsg] = useState("");
+  const show = showByKey(seasons.find((s) => s.id === season)?.show_key);
 
   const load = useCallback(async () => {
     if (!season) return;
@@ -29,7 +31,7 @@ export default function AdminResults({ seasons }: { seasons: { id: string; title
 
   async function save(d: ResultsDraft): Promise<string | null> {
     const row = {
-      ...draftToRow(d, contestants),
+      ...draftToRow(show, d, contestants),
       season_id: season,
       num: d.num,
       title: d.title.trim() || null,
@@ -48,6 +50,7 @@ export default function AdminResults({ seasons }: { seasons: { id: string; title
     return (
       <main className="section">
         <ResultsEditor
+          show={show}
           initial={edit}
           contestants={contestants}
           episodes={episodes}
@@ -90,7 +93,7 @@ export default function AdminResults({ seasons }: { seasons: { id: string; title
             </span>
             <span className="row">
               <span className={`chip ${ep.posted ? "win" : "plain"}`}>{ep.posted ? "Posted" : "Not posted"}</span>
-              <button className="btn small" onClick={() => { setMsg(""); setEdit(draftFromEpisode(ep)); }}>{ep.posted ? "Edit" : "Enter results"}</button>
+              <button className="btn small" onClick={() => { setMsg(""); setEdit(draftFromEpisode(show, ep)); }}>{ep.posted ? "Edit" : "Enter results"}</button>
             </span>
           </div>
         ))}

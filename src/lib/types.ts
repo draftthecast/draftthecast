@@ -5,7 +5,8 @@ export interface Contestant {
   season_id: string;
   id: string;
   name: string;
-  team: Team;
+  /** null for shows without teams. */
+  team: Team | null;
   age: number | null;
   hometown: string | null;
 }
@@ -28,6 +29,8 @@ export interface Episode {
   final2: string[];
   winner: string | null;
   bonus: Record<string, number>;
+  /** Show-specific results without their own column, e.g. { murdered: ["kim"] }. */
+  events?: Record<string, string[]>;
   notes: string | null;
   /** Set when these results come from the league's own entry rather than the site-wide results. */
   fromLeague?: boolean;
@@ -38,6 +41,8 @@ export interface Season {
   show: string;
   title: string;
   network: string | null;
+  show_key?: string;
+  active?: boolean;
 }
 
 export interface League {

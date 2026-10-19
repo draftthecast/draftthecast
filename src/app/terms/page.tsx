@@ -9,7 +9,7 @@ export default function Terms() {
       <p className="soft">Last updated October 4, 2026</p>
       <ul>
         <li>Draft the Cast is a free game played for fun. There are no entry fees or prizes run through the site.</li>
-        <li>It&apos;s a fan project and isn&apos;t affiliated with, sponsored by or endorsed by FOX, Hell&apos;s Kitchen or any network or production company. Show names are used only to describe what each league is about.</li>
+        <li>It&apos;s a fan project and isn&apos;t affiliated with, sponsored by or endorsed by any show (including Hell&apos;s Kitchen and The Traitors), network or production company. Show names are used only to describe what each league is about.</li>
         <li>Results are entered by hand after each episode airs and may occasionally be corrected.</li>
         <li>Keep team names friendly. We may remove content or accounts that are abusive.</li>
         <li>The site is provided as is, and we may change or end it at any time.</li>

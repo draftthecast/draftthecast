@@ -5,6 +5,7 @@ import { getUser } from "@/lib/supabase/server";
 import { adminViewOn } from "@/lib/viewMode";
 import ViewToggle from "@/components/ViewToggle";
 import { SITE } from "@/lib/site";
+import { SHOWS } from "@/lib/shows";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   description: SITE.description,
   metadataBase: new URL(SITE.url),
   applicationName: SITE.name,
-  keywords: ["fantasy reality TV", "Hell's Kitchen fantasy league", "Hell's Kitchen Season 25", "reality TV draft", "fantasy league with friends"],
+  keywords: ["fantasy reality TV", "Hell's Kitchen fantasy league", "Hell's Kitchen Season 25", "Traitors fantasy league", "The Traitors New Blood", "reality TV draft", "fantasy league with friends"],
   openGraph: { type: "website", siteName: SITE.name, url: SITE.url, title: `${SITE.name}: ${SITE.tagline}`, description: SITE.description, locale: "en_US" },
   twitter: { card: "summary_large_image", title: `${SITE.name}: ${SITE.tagline}`, description: SITE.description },
 };
@@ -103,7 +104,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </header>
           {children}
           <footer>
-            A fan-made fantasy game. Not affiliated with FOX, Hell&apos;s Kitchen or any network.{" "}
+            A fan-made fantasy game. Not affiliated with any show, network or production company.{" "}
+            {SHOWS.map((s) => <span key={s.key}><Link href={`/shows/${s.slug}`}>{s.name}</Link> · </span>)}
             <Link href="/how-to-play">How to play</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
           </footer>
         </div>

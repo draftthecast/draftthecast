@@ -1,65 +1,53 @@
-import type { Contestant, Episode, FlagKey, Guess, League, LeagueResult, Member, Pick, Team } from "./types.ts";
-
-export const PTS = {
-  survive: 2,
-  challenge: 2,
-  service: 2,
-  mvp: 3,
-  nominated: -2,
-  survivedBlock: 3,
-  ejected: -3,
-  eliminated: -3,
-  quit: -5,
-  switched: 1,
-  blackJacket: 10,
-  final2: 10,
-  winner: 25,
-  guess: 5,
-  winnerPick: 15,
-} as const;
-
-export const FLAGS: [FlagKey, string][] = [
-  ["mvp", "Standout"],
-  ["nominated", "Up for elimination"],
-  ["ejected", "Kicked out"],
-  ["eliminated", "Sent home"],
-  ["quit", "Quit or medical"],
-  ["switched", "Switched team"],
-  ["black_jacket", "Black jacket"],
-  ["final2", "Final 2"],
-];
+import type { Contestant, Episode, Guess, League, LeagueResult, Member, Pick, Team } from "./types.ts";
+import { COLUMN_EVENTS, type ShowDef } from "./shows.ts";
 
 export type ScoreItem = [label: string, points: number];
 
 export interface ChefState {
-  team: Team;
+  team: Team | null;
   out: number | null;
   pts: number;
   log: { ep: number; items: ScoreItem[]; sum: number; counted: boolean }[];
   jacket: boolean;
+  traitor: boolean;
   final2: boolean;
   winner: boolean;
 }
 
-const has = (ep: Episode, key: FlagKey, id: string) => (ep[key] ?? []).includes(id);
+const COLUMNS = new Set<string>(COLUMN_EVENTS);
 
-export function episodeItems(ep: Episode, id: string, team: Team): ScoreItem[] {
+/** Contestant ids for one result field, whether it has its own column or lives in `events`. */
+export function eventIds(ep: Episode, key: string): string[] {
+  if (COLUMNS.has(key)) return ((ep as unknown as Record<string, string[] | undefined>)[key]) ?? [];
+  return ep.events?.[key] ?? [];
+}
+
+const has = (ep: Episode, key: string, id: string) => eventIds(ep, key).includes(id);
+
+/** Everyone who left the game in this episode. */
+export function outIds(show: ShowDef, ep: Episode): string[] {
+  return show.events.filter((e) => e.out).flatMap((e) => eventIds(ep, e.key));
+}
+
+export function winnerIds(ep: Episode): string[] {
+  return [...(ep.winner ? [ep.winner] : []), ...eventIds(ep, "winners")];
+}
+
+export function episodeItems(show: ShowDef, ep: Episode, id: string, team: Team | null): ScoreItem[] {
   const items: ScoreItem[] = [];
-  const out = has(ep, "eliminated", id) || has(ep, "quit", id);
-  const won = (v: Episode["challenge_win"]) => v === team || v === "both";
-  if (!out) items.push(["Stayed in", PTS.survive]);
-  if (won(ep.challenge_win)) items.push(["Team won the challenge", PTS.challenge]);
-  if (won(ep.service_win)) items.push(["Team won dinner service", PTS.service]);
-  if (has(ep, "mvp", id)) items.push(["Standout of the night", PTS.mvp]);
-  if (has(ep, "nominated", id)) items.push(["Up for elimination", PTS.nominated]);
-  if (has(ep, "nominated", id) && !out) items.push(["Survived elimination", PTS.survivedBlock]);
-  if (has(ep, "ejected", id)) items.push(["Kicked out of service", PTS.ejected]);
-  if (has(ep, "eliminated", id)) items.push(["Sent home", PTS.eliminated]);
-  if (has(ep, "quit", id)) items.push(["Left the competition", PTS.quit]);
-  if (has(ep, "switched", id)) items.push(["Switched teams", PTS.switched]);
-  if (has(ep, "black_jacket", id)) items.push(["Earned a black jacket", PTS.blackJacket]);
-  if (has(ep, "final2", id)) items.push(["Made the final 2", PTS.final2]);
-  if (ep.winner === id) items.push(["Won the season", PTS.winner]);
+  const out = outIds(show, ep).includes(id);
+  if (!out) items.push(["Stayed in", show.survive]);
+  for (const t of show.teamResults) {
+    const v = ep[t.key];
+    if (team && (v === team || v === "both")) items.push([t.scored, t.pts]);
+  }
+  for (const e of show.events) {
+    if (e.key === "winners") continue;
+    if (!has(ep, e.key, id)) continue;
+    items.push([e.scored, e.pts]);
+    if (e.key === "nominated" && show.survivedBlock && !out) items.push(["Survived elimination", show.survivedBlock.pts]);
+  }
+  if (winnerIds(ep).includes(id)) items.push(["Won the season", show.winnerPts]);
   const bonus = Number(ep.bonus?.[id] ?? 0);
   if (bonus) items.push(["Bonus", bonus]);
   return items;
@@ -67,29 +55,34 @@ export function episodeItems(ep: Episode, id: string, team: Team): ScoreItem[] {
 
 /** Walk posted episodes in order. `beforeNum` stops before that episode (used by the results editor). */
 export function chefStates(
+  show: ShowDef,
   contestants: Contestant[],
   episodes: Episode[],
   startEpisode: number,
   beforeNum?: number,
 ): Record<string, ChefState> {
   const st: Record<string, ChefState> = {};
-  for (const c of contestants) st[c.id] = { team: c.team, out: null, pts: 0, log: [], jacket: false, final2: false, winner: false };
+  for (const c of contestants)
+    st[c.id] = { team: show.teams ? c.team : null, out: null, pts: 0, log: [], jacket: false, traitor: false, final2: false, winner: false };
   const posted = episodes.filter((e) => e.posted).sort((a, b) => a.num - b.num);
   for (const ep of posted) {
     if (beforeNum !== undefined && ep.num >= beforeNum) break;
+    const gone = outIds(show, ep);
+    const won = winnerIds(ep);
     for (const c of contestants) {
       const s = st[c.id];
       if (s.out !== null) continue;
-      const items = episodeItems(ep, c.id, s.team);
+      const items = episodeItems(show, ep, c.id, s.team);
       const sum = items.reduce((a, i) => a + i[1], 0);
       const counted = ep.num >= startEpisode;
       if (counted) s.pts += sum;
       s.log.push({ ep: ep.num, items, sum, counted });
-      if (has(ep, "eliminated", c.id) || has(ep, "quit", c.id)) s.out = ep.num;
-      if (has(ep, "switched", c.id)) s.team = s.team === "red" ? "blue" : "red";
+      if (gone.includes(c.id)) s.out = ep.num;
+      if (has(ep, "switched", c.id) && s.team) s.team = s.team === "red" ? "blue" : "red";
       if (has(ep, "black_jacket", c.id)) s.jacket = true;
+      if (has(ep, "traitor", c.id)) s.traitor = true;
       if (has(ep, "final2", c.id)) s.final2 = true;
-      if (ep.winner === c.id) s.winner = true;
+      if (won.includes(c.id)) s.winner = true;
     }
   }
   return st;
@@ -107,6 +100,7 @@ export interface StandingRow {
 }
 
 export function standings(
+  show: ShowDef,
   league: League,
   members: Member[],
   picks: Pick[],
@@ -116,7 +110,7 @@ export function standings(
 ): StandingRow[] {
   const posted = episodes.filter((e) => e.posted).sort((a, b) => a.num - b.num);
   const last = posted.length ? posted[posted.length - 1].num : 0;
-  const champ = posted.map((e) => e.winner).find(Boolean) ?? null;
+  const champs = new Set(posted.flatMap(winnerIds));
   const byNum = new Map(posted.map((e) => [e.num, e]));
   return members
     .map((m) => {
@@ -135,13 +129,13 @@ export function standings(
       for (const g of guesses.filter((g) => g.member_id === m.id)) {
         const ep = byNum.get(g.episode_num);
         if (!ep || ep.num < league.start_episode) continue;
-        if ([...ep.eliminated, ...ep.quit].includes(g.contestant_id)) {
-          guessPts += PTS.guess;
+        if (outIds(show, ep).includes(g.contestant_id)) {
+          guessPts += show.guessPts;
           correctGuesses += 1;
-          if (ep.num === last) lastPts += PTS.guess;
+          if (ep.num === last) lastPts += show.guessPts;
         }
       }
-      const winnerPts = champ && m.winner_pick === champ ? PTS.winnerPick : 0;
+      const winnerPts = m.winner_pick && champs.has(m.winner_pick) ? show.winnerPickPts : 0;
       return { member: m, roster, chefPts, guessPts, winnerPts, total: chefPts + guessPts + winnerPts, lastPts, correctGuesses };
     })
     .sort(

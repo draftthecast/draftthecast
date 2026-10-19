@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --test src/lib/scoring.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/scoring.test.ts scripts/show-fields.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

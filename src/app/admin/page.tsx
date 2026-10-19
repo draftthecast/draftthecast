@@ -19,8 +19,8 @@ export default async function AdminPage() {
     );
   }
   const [{ data: seasons }, { data: leagues }] = await Promise.all([
-    supabase.from("seasons").select("id, title").order("created_at"),
-    supabase.from("leagues").select("id, name, draft_status, league_members(count)").order("created_at", { ascending: false }),
+    supabase.from("seasons").select("*").order("created_at"),
+    supabase.from("leagues").select("id, name, draft_status, seasons(title), league_members(count)").order("created_at", { ascending: false }),
   ]);
   return (
     <>
@@ -33,7 +33,7 @@ export default async function AdminPage() {
             <div key={l.id} className="it">
               <Link href={`/league/${l.id}`}><b>{l.name}</b></Link>
               <span className="soft small">
-                {(l.league_members as unknown as { count: number }[])?.[0]?.count ?? 0} teams,{" "}
+                {(l.seasons as unknown as { title: string } | null)?.title ?? ""}, {(l.league_members as unknown as { count: number }[])?.[0]?.count ?? 0} teams,{" "}
                 {l.draft_status === "setup" ? "draft not open" : l.draft_status === "open" ? "drafting" : "season underway"}
               </span>
             </div>

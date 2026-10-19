@@ -1,0 +1,143 @@
+{
+  "season": {
+    "show": "traitors",
+    "title": "The Traitors: New Blood",
+    "network": "NBC",
+    "active": true
+  },
+  "_note": "Contestant ids used in episode files.",
+  "cast": {
+    "tomica": {
+      "name": "Tomica Adams",
+      "age": 54,
+      "hometown": "Boston, MA",
+      "occupation": "Pilot"
+    },
+    "shane": {
+      "name": "Shane Beatty",
+      "age": 32,
+      "hometown": "Staten Island, NY",
+      "occupation": "Ironworker"
+    },
+    "abbey": {
+      "name": "Abbey Benjamin",
+      "age": 37,
+      "hometown": "Mangham, LA",
+      "occupation": "Nurse"
+    },
+    "morgan": {
+      "name": "Morgan Cook",
+      "age": 30,
+      "hometown": "Midland, MI",
+      "occupation": "Content Creator"
+    },
+    "kim": {
+      "name": "Kim Daily",
+      "age": 37,
+      "hometown": "Houston, TX",
+      "occupation": "Lawyer"
+    },
+    "katie": {
+      "name": "Katie Fites",
+      "age": 23,
+      "hometown": "Jacksonville, FL",
+      "occupation": "Marketing Manager"
+    },
+    "michael": {
+      "name": "Michael Foote",
+      "age": 38,
+      "hometown": "New York, NY",
+      "occupation": "Lawyer"
+    },
+    "wyatt": {
+      "name": "Wyatt Gillespie",
+      "age": 26,
+      "hometown": "Ligonier, PA",
+      "occupation": "Designer"
+    },
+    "niyyah": {
+      "name": "Niyyah Hayes",
+      "age": 29,
+      "hometown": "Indianapolis, IN",
+      "occupation": "Therapist"
+    },
+    "madeline": {
+      "name": "Madeline Kostopulos",
+      "age": 26,
+      "hometown": "San Diego, CA",
+      "occupation": "Construction Manager"
+    },
+    "sherry": {
+      "name": "Sherry Kuehl",
+      "age": 65,
+      "hometown": "Leawood, KS",
+      "occupation": "Writer"
+    },
+    "abby": {
+      "name": "Abby Lee",
+      "age": 29,
+      "hometown": "Saint Paul, MN",
+      "occupation": "Astrophysicist"
+    },
+    "kriste": {
+      "name": "Kriste Lewis",
+      "age": 52,
+      "hometown": "Hattiesburg, MS",
+      "occupation": "Realtor"
+    },
+    "ben": {
+      "name": "Ben McDonnell",
+      "age": 34,
+      "hometown": "Granbury, TX",
+      "occupation": "Barrel Racer"
+    },
+    "clyde": {
+      "name": "Clyde Moser",
+      "age": 32,
+      "hometown": "Charleston, SC",
+      "occupation": "Teacher"
+    },
+    "xavier": {
+      "name": "Xavier Scruggs",
+      "age": 38,
+      "hometown": "Wesley Chapel, FL",
+      "occupation": "MLB Analyst"
+    },
+    "logan": {
+      "name": "Logan Smith",
+      "age": 26,
+      "hometown": "Gatlinburg, TN",
+      "occupation": "Realtor"
+    },
+    "arisa": {
+      "name": "Arisa Thomas",
+      "age": 36,
+      "hometown": "Los Angeles, CA",
+      "occupation": "Dog Groomer"
+    },
+    "joe": {
+      "name": "Joe Vanella",
+      "age": 44,
+      "hometown": "Wantagh, NY",
+      "occupation": "Funeral Director"
+    },
+    "jay": {
+      "name": "Jay Vinnedge",
+      "age": 36,
+      "hometown": "Oklahoma City, OK",
+      "occupation": "Physician"
+    },
+    "victor": {
+      "name": "Victor Vollbrechthausen",
+      "age": 26,
+      "hometown": "New York, NY",
+      "occupation": "Business Executive"
+    },
+    "mark": {
+      "name": "Mark Zgoda",
+      "age": 26,
+      "hometown": "Phillipsburg, NJ",
+      "occupation": "Personal Trainer"
+    }
+  }
+}

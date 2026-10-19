@@ -4,12 +4,16 @@ import { getUser } from "@/lib/supabase/server";
 import { adminViewOn, isAdmin } from "@/lib/viewMode";
 import SignInButton from "@/components/SignInButton";
 import { CreateLeague, JoinWithCode } from "@/components/HomeForms";
+import ShowCards from "@/components/ShowCards";
+import { getCatalog } from "@/lib/catalog";
+import { showByKey } from "@/lib/shows";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ signin?: string; reason?: string }> }) {
-  const { signin, reason } = await searchParams;
+export default async function Home({ searchParams }: { searchParams: Promise<{ signin?: string; reason?: string; start?: string }> }) {
+  const { signin, reason, start } = await searchParams;
   const { supabase, user } = await getUser();
+  const catalog = await getCatalog(supabase);
 
   if (!user) {
     return (
@@ -17,8 +21,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         <section className="hero">
           <h1>Fantasy leagues for reality TV</h1>
           <p>
-            Draft chefs from Hell&apos;s Kitchen Season 25, guess who goes home each week, and see who on your group chat
-            really knows the show.
+            Draft the cast with your group chat, guess who&apos;s out each week, and find out who really knows the show.
           </p>
           <SignInButton />
           {signin === "failed" && (
@@ -28,18 +31,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
             </span>
           )}
         </section>
+        <section className="section">
+          <h2>Shows you can play</h2>
+          <ShowCards catalog={catalog} />
+        </section>
         <ol className="steps">
           <li>
             <h3>Start or join a league</h3>
             <span className="soft">Create one and send the invite link, or open a link a friend sent you.</span>
           </li>
           <li>
-            <h3>Draft your chefs</h3>
+            <h3>Draft your picks</h3>
             <span className="soft">Take turns picking contestants until every team is full.</span>
           </li>
           <li>
             <h3>Score every episode</h3>
-            <span className="soft">Wins, survivals and black jackets earn points. Most points at the finale wins.</span>
+            <span className="soft">Wins, survivals and big moments earn points. Most points at the finale wins.</span>
           </li>
         </ol>
       </main>
@@ -50,16 +57,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const [{ data: leagues }, { data: seasons }, { data: allLeagues }] = await Promise.all([
     supabase
       .from("leagues")
-      .select("id, name, season_id, draft_status, seasons(title), league_members!inner(user_id)")
+      .select("id, name, season_id, draft_status, seasons(*), league_members!inner(user_id)")
       .eq("league_members.user_id", user.id)
       .order("created_at", { ascending: false }),
-    supabase.from("seasons").select("id, title").eq("active", true).order("created_at"),
+    supabase.from("seasons").select("*").eq("active", true).order("created_at"),
     adminView
       ? supabase.from("leagues").select("id, name, draft_status, seasons(title), league_members(count)").order("created_at", { ascending: false })
       : Promise.resolve({ data: null }),
   ]);
   const mineIds = new Set((leagues ?? []).map((l) => l.id));
   const others = (allLeagues ?? []).filter((l) => !mineIds.has(l.id));
+  const playing = new Set((leagues ?? []).map((l) => showByKey((l.seasons as unknown as { show_key?: string } | null)?.show_key).key));
+  const openSeasons = (seasons ?? []).filter((s) => catalog.some((c) => c.seasons.some((x) => x.id === s.id && x.status !== "finished")));
 
   return (
     <main className="section" style={{ gap: 28 }}>
@@ -104,8 +113,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           </div>
         </section>
       )}
+      <section className="section">
+        <div className="sechead">
+          <h2>{leagues && leagues.length ? "Play another show" : "Shows you can play"}</h2>
+          <span className="soft small">Every show has its own leagues and scoring</span>
+        </div>
+        <ShowCards catalog={catalog} playing={playing} />
+      </section>
       <div className="grid2">
-        <CreateLeague seasons={seasons ?? []} />
+        <CreateLeague seasons={openSeasons} initial={start} />
         <JoinWithCode />
       </div>
     </main>
