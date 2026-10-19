@@ -5,17 +5,24 @@
   "posted": false,
   "challenge_win": "red",
   "service_win": "blue",
-  "mvp": ["georgiana"],
-  "nominated": ["jeyda", "haley"],
+  "mvp": [
+    "georgiana"
+  ],
+  "nominated": [
+    "jeyda",
+    "haley"
+  ],
   "ejected": [],
-  "eliminated": ["jeyda"],
+  "eliminated": [
+    "jeyda"
+  ],
   "quit": [],
   "switched": [],
   "black_jacket": [],
   "final2": [],
   "winner": null,
   "bonus": {},
-  "notes": "Still held as a draft (checked Oct 17): only one independent detailed recap exists, Gold Derby's, also carried by Yahoo and copied on Bing Chef, so who went home isn't confirmed by two sources yet. That recap says Red won the beer-pong challenge 7-6 when Georgiana beat Jonny in the deciding round, Ramsay ended Red's dinner service early, Mya named herself and Jeyda but Ramsay swapped Mya for Haley, and Jeyda went home. Tonboriday's 'episode 4' recap actually describes episode 3, so it was not used.",
+  "notes": "Still held as a draft (checked Oct 19): only one readable independent recap, Gold Derby's (also carried by Yahoo and copied on Bing Chef), says who went home. It says Red won the beer-pong challenge 7-6 when Georgiana beat Jonny in the deciding round, Ramsay ended Red's dinner service early, Mya named herself and Jeyda but Ramsay swapped Mya for Haley, and Jeyda went home. Primetimer has two episode 4 recaps but the pages would not load and their headlines don't name who left; Tonboriday's 'episode 4' recap actually describes episode 3.",
   "sources": [
     "https://www.goldderby.com/reality-tv/2026/hells-kitchen-season-25-episode-4-recap/",
     "https://www.yahoo.com/entertainment/tv/articles/hell-kitchen-recap-chefs-schooled-010000090.html",
