@@ -117,21 +117,35 @@ if (!url || !key) {
   process.exit(1);
 }
 
+const base = url.replace(/\/$/, "");
+const auth = {
+  apikey: key,
+  // Legacy service_role keys are JWTs and go in Authorization too.
+  // Newer secret keys (sb_secret_...) are not JWTs and work from apikey alone.
+  ...(key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}),
+};
+
 async function upsert(table, conflict, rows) {
   if (!rows.length) return null;
-  const res = await fetch(`${url.replace(/\/$/, "")}/rest/v1/${table}?on_conflict=${conflict}`, {
+  const res = await fetch(`${base}/rest/v1/${table}?on_conflict=${conflict}`, {
     method: "POST",
-    headers: {
-      apikey: key,
-      // Legacy service_role keys are JWTs and go in Authorization too.
-      // Newer secret keys (sb_secret_...) are not JWTs and work from apikey alone.
-      ...(key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}),
-      "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates,return=minimal",
-    },
+    headers: { ...auth, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" },
     body: JSON.stringify(rows),
   });
   return res.ok ? null : `${table} (${res.status}): ${await res.text()}`;
+}
+
+// Episodes already posted in the database (for example, entered by hand on the admin page).
+// A file that still says "posted": false never un-posts them; it's skipped with a warning.
+const postedRes = await fetch(`${base}/rest/v1/episodes?select=season_id,num&posted=eq.true`, { headers: auth });
+const alreadyPosted = new Set(postedRes.ok ? (await postedRes.json()).map((e) => `${e.season_id}/${e.num}`) : []);
+if (!postedRes.ok) console.warn(`Couldn't read posted episodes (${postedRes.status}); syncing every file as written.`);
+for (const s of seasons) {
+  s.episodeRows = s.episodeRows.filter((r) => {
+    if (r.posted || !alreadyPosted.has(`${s.season}/${r.num}`)) return true;
+    console.warn(`Skipped ${s.season} episode ${r.num}: it's posted in the database but the file says "posted": false. Update the file to match.`);
+    return false;
+  });
 }
 
 // Each season syncs on its own, so a problem with one show doesn't hold up another.

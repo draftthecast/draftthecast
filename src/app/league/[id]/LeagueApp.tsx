@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ResultsEditor, { draftFromEpisode, draftToRow, emptyDraft, type ResultsDraft } from "@/components/ResultsEditor";
 import { createClient } from "@/lib/supabase/client";
-import { chefStates, draftInfo, effectiveEpisodes, eventIds, isLocked, nextEpisode, outIds, standings, winnerIds, type ChefState, type DraftInfo } from "@/lib/scoring";
+import { chefStates, draftInfo, effectiveEpisodes, eventIds, firstUnposted, isLocked, nextEpisode, outIds, standings, winnerIds, type ChefState, type DraftInfo } from "@/lib/scoring";
 import { cap, showByKey, type ShowDef } from "@/lib/shows";
 import ScoringTable from "@/components/ScoringTable";
 import type { Contestant, Episode, Guess, League, LeagueResult, Member, Pick, Profile, Season } from "@/lib/types";
@@ -590,13 +590,15 @@ function Chefs({ x }: { x: Ctx }) {
 
 /* ---------- results ---------- */
 function Results({ x }: { x: Ctx }) {
-  const { show, league, contestants, episodes, CHEF, isCommish, isSiteAdmin, nextEp, posted, run, busy, supabase, flash, setConfirm, leagueResults, reload } = x;
+  const { show, league, contestants, episodes, CHEF, isCommish, isSiteAdmin, posted, run, busy, supabase, flash, setConfirm, leagueResults, reload } = x;
   const [edit, setEdit] = useState<ResultsDraft | null>(null);
   const names = (ids: string[]) => ids.map((id) => CHEF[id]?.name ?? id).join(", ");
   const teamWord = (v: Episode["challenge_win"]) =>
     v === "red" ? <span className="chip red">Red team</span> : v === "blue" ? <span className="chip blue">Blue team</span> : v === "both" ? <span className="chip plain">Both teams</span> : null;
   const line = (k: string, v: React.ReactNode) => (v && (typeof v !== "string" || v.length) ? <React.Fragment key={k}><dt>{k}</dt><dd>{v}</dd></React.Fragment> : null);
   const hasOwn = (num: number) => leagueResults.some((r) => r.num === num);
+  // Results are entered for the earliest unposted episode, even if a later one is now the guessing target.
+  const nextEp = firstUnposted(episodes);
   const aired = !!nextEp && (!nextEp.air_at || new Date(nextEp.air_at).getTime() <= Date.now());
 
   async function save(dr: ResultsDraft): Promise<string | null> {

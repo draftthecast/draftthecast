@@ -190,9 +190,19 @@ export function draftInfo(league: League, members: Member[], picks: Pick[]): Dra
   };
 }
 
-/** The next episode whose results aren't posted yet. */
-export function nextEpisode(episodes: Episode[]): Episode | null {
+/** The first episode whose results aren't posted yet (aired or not). Results get entered for this one. */
+export function firstUnposted(episodes: Episode[]): Episode | null {
   return [...episodes].sort((a, b) => a.num - b.num).find((e) => !e.posted) ?? null;
+}
+
+/**
+ * The episode people guess on next: the first unposted one that hasn't aired yet.
+ * A held (unposted) episode that already aired doesn't block guessing on the one after it.
+ * Falls back to the first unposted episode when nothing later is on the schedule.
+ */
+export function nextEpisode(episodes: Episode[], now = Date.now()): Episode | null {
+  const sorted = [...episodes].sort((a, b) => a.num - b.num).filter((e) => !e.posted);
+  return sorted.find((e) => !e.air_at || new Date(e.air_at).getTime() > now) ?? sorted[0] ?? null;
 }
 
 export function isLocked(ep: Episode | null, now = Date.now()): boolean {

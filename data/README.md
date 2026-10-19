@@ -101,7 +101,28 @@ Add a folder named for the season (e.g. `traitors-us6`) with a `contestants.json
 ## Rules for automatic entry
 
 - Only write an episode after it has aired and at least one detailed recap exists.
-- Confirm who went home (sent home, murdered or banished) with **two independent sources**. If sources disagree or only one exists, write the file with `"posted": false` so it doesn't count yet, and say so in `notes`.
+- Confirm who went home (sent home, murdered or banished) with **two independent sources**. If sources disagree or only one exists, write the file with `"posted": false` so it doesn't count yet, and say so in `notes`. A held episode only delays points; guessing on the next episode stays open.
+- One detailed recap is enough for the rest of the episode (challenge, service, standouts, nominations) once who went home is confirmed by two.
 - Leave a team field `null` rather than guess.
 - Add next episode's air time if a schedule source lists it: add or update `ep-NN.json` for the upcoming episode with `"posted": false` and empty results.
 - New chefs never appear mid-season in Hell's Kitchen. If a recap names someone not in `contestants.json`, it's a nickname (e.g. "Serenity" is `reni`, "Jonny G" is `jonny`) or a mistake; don't invent ids.
+- Never change an earlier posted episode unless a source clearly shows an error; say so in the commit message.
+
+### Finding two sources
+
+Search several ways before settling for one source: "<show> season N episode N recap", "<show> who went home episode N", "<show> eliminated" plus the date, and the contestant names you suspect. Recaps often appear a day or two after the episode, so a held episode is worth checking again on the next run.
+
+What counts as a source:
+
+- **Detailed recaps** from any of these, or similar entertainment outlets: Gold Derby, Primetimer, TV Insider, Soap Central, Reality Blurred, Moviedelic, entertainmentNow, Parade, Screen Rant, Dexerto, TVLine, Decider, Vulture, AV Club, Entertainment Weekly, Cinemablend, Meaww, TellTale TV, DirecTV Insider, the network's own site (FOX, NBC Insider).
+- **Short "who went home" articles** count, as long as they name who left.
+- **A search-result headline** counts only if it names who went home (e.g. "Jeyda eliminated"). A headline that hints ("over fries and spinach") doesn't.
+
+What doesn't count as independent:
+
+- Syndicated copies: Yahoo, MSN, AOL and similar usually republish another outlet's article (Gold Derby, EW, Parade). Count the original once.
+- Scraper or copy sites with no byline that reproduce another recap (e.g. bingchef.com copying Gold Derby).
+- A page whose details plainly belong to a different episode (check the episode number and the challenge).
+- Fan wikis and forums, unless the page shows an elimination table that matches a recap.
+
+If a page won't load, try another outlet instead of giving up: many sites block automated reading, and the same news is usually on several of them.

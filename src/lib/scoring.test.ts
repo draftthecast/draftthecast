@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chefStates, draftInfo, effectiveEpisodes, outIds, standings } from "./scoring.ts";
+import { chefStates, draftInfo, effectiveEpisodes, firstUnposted, nextEpisode, outIds, standings } from "./scoring.ts";
 import { SHOWS, scoringGroups, showByKey } from "./shows.ts";
 import type { Contestant, Episode, League, Member, Pick } from "./types.ts";
 
@@ -113,4 +113,16 @@ test("traitors guesses count murders and banishments, and several winners share 
 
 test("every show's events have unique keys", () => {
   for (const s of SHOWS) assert.equal(new Set(s.events.map((e) => e.key)).size, s.events.length, s.key);
+});
+
+test("a held episode that already aired doesn't block guessing on the next one", () => {
+  const now = Date.parse("2026-10-19T12:00:00-04:00");
+  const sched = [
+    ep(3, {}),
+    ep(4, { posted: false, air_at: "2026-10-15T20:00:00-04:00" }),
+    ep(5, { posted: false, air_at: "2026-10-22T20:00:00-04:00" }),
+  ];
+  assert.equal(nextEpisode(sched, now)?.num, 5);
+  assert.equal(firstUnposted(sched)?.num, 4);
+  assert.equal(nextEpisode(sched.slice(0, 2), now)?.num, 4);
 });
