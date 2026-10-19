@@ -20,16 +20,16 @@ const eps = [
 
 test("chef points match the scoring table", () => {
   const st = chefStates(HK, cast, eps, 1);
-  assert.equal(st.mike.pts, 4 + 7); // ep1 stay+challenge, ep2 stay+service+standout
-  assert.equal(st.diego.pts, 7 + 4);
-  assert.equal(st.mya.pts, 5 + 5);
+  assert.equal(st.mike.pts, 4 + 4); // ep1 stay+challenge, ep2 stay+service (standouts don't score in Hell's Kitchen)
+  assert.equal(st.diego.pts, 4 + 4);
+  assert.equal(st.mya.pts, 2 + 2);
   assert.equal(st.reni.pts, 2 + (-2 - 3));
   assert.equal(st.reni.out, 2);
 });
 
 test("episodes before the start episode don't count", () => {
   const st = chefStates(HK, cast, eps, 2);
-  assert.equal(st.mike.pts, 7);
+  assert.equal(st.mike.pts, 4);
   assert.equal(st.mike.log.length, 2);
 });
 
@@ -42,8 +42,8 @@ test("standings add guesses and sort by total", () => {
   ];
   const rows = standings(HK, league, [m("a"), m("b")], picks, [{ league_id: "L", member_id: "a", episode_num: 2, contestant_id: "reni" }], eps, chefStates(HK, cast, eps, 1));
   assert.equal(rows[0].member.id, "a");
-  assert.equal(rows[0].total, 10 + 5);
-  assert.equal(rows[0].lastPts, 5 + 5);
+  assert.equal(rows[0].total, 4 + 5);
+  assert.equal(rows[0].lastPts, 2 + 5);
 });
 
 test("snake order reverses each round", () => {
@@ -71,6 +71,7 @@ test("hell's kitchen scoring table is unchanged", () => {
   assert.equal(rows["Put up for elimination"], -2);
   assert.equal(rows["Survives elimination"], 3);
   assert.equal(rows["Earns a black jacket"], 10);
+  assert.ok(!Object.keys(rows).some((k) => k.toLowerCase().includes("standout")), "Hell's Kitchen has no standout points");
   assert.equal(rows["Wins the season"], 25);
 });
 

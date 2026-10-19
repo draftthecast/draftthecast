@@ -67,7 +67,6 @@ const HK: ShowDef = {
     { key: "service_win", label: "Dinner service won by", scored: "Team won dinner service", rule: "Their team wins dinner service", pts: 2 },
   ],
   events: [
-    { key: "mvp", label: "Standout", scored: "Standout of the night", rule: "Standout of the night (best dish, challenge win, punishment pass)", pts: 3, group: "episode" },
     { key: "nominated", label: "Up for elimination", scored: "Up for elimination", rule: "Put up for elimination", pts: -2, group: "out" },
     { key: "ejected", label: "Kicked out", scored: "Kicked out of service", rule: "Kicked out of dinner service", pts: -3, group: "out" },
     { key: "eliminated", label: "Sent home", scored: "Sent home", rule: "Sent home", pts: -3, out: true, group: "out" },

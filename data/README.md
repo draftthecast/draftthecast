@@ -14,7 +14,6 @@ A scheduled Claude task writes these files automatically the day after each epis
   "posted": true,
   "challenge_win": "red | blue | both | null",
   "service_win": "red | blue | both | null",
-  "mvp": [],
   "nominated": [],
   "ejected": [],
   "eliminated": [],
@@ -37,7 +36,6 @@ Use the chef ids from `contestants.json` (for example `"mya"`, not `"Mya Gonsalv
 | --- | --- |
 | `challenge_win` | The team that won the main team challenge. If several challenges are mixed, the team challenge that decided the reward/punishment. `null` when there was no team challenge or it's unclear. |
 | `service_win` | The team that won dinner service. `"both"` if Ramsay declared both teams winners; `null` if there was no service, both lost, or it's unclear. |
-| `mvp` | Standouts: top-scoring dish(es), individual challenge winners, punishment-pass winners, or a chef Ramsay singles out as best of the night. Usually 1 to 3 chefs; more only when the episode clearly highlights more. |
 | `nominated` | Chefs put up for elimination (nominated by their team or by Ramsay). |
 | `ejected` | Chefs Ramsay kicked out of dinner service. |
 | `eliminated` | Chefs Ramsay sent home, including anyone eliminated without nomination or during service. |

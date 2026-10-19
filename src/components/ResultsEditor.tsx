@@ -142,7 +142,7 @@ export default function ResultsEditor({
         <p className="soft small">
           Tick what happened to each {show.noun.one}; points for staying in are added automatically.
           {show.teams
-            ? " Once chefs get black jackets and play solo, leave both team results empty and mark challenge winners as Standouts."
+            ? " Once chefs get black jackets and play solo, leave both team results empty."
             : " Count a murder in the episode where the victim is revealed."}
         </p>
       </div>

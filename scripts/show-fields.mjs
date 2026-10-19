@@ -8,7 +8,6 @@ export const SHOW_FIELDS = {
     teamResults: ["challenge_win", "service_win"],
     winnerColumn: true,
     lists: {
-      mvp: "column:mvp",
       nominated: "column:nominated",
       ejected: "column:ejected",
       eliminated: "column:eliminated",
