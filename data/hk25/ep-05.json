@@ -2,20 +2,27 @@
   "num": 5,
   "title": "The Meat of the Matter",
   "air_at": "2026-10-22T20:00:00-04:00",
-  "posted": false,
-  "challenge_win": null,
-  "service_win": null,
-  "nominated": [],
+  "posted": true,
+  "challenge_win": "blue",
+  "service_win": "red",
+  "nominated": [
+    "aiden",
+    "jonny"
+  ],
   "ejected": [],
-  "eliminated": [],
+  "eliminated": [
+    "aiden"
+  ],
   "quit": [],
   "switched": [],
   "black_jacket": [],
   "final2": [],
   "winner": null,
   "bonus": {},
-  "notes": "Upcoming episode. Not aired yet.",
+  "notes": "Blue won the protein-identification relay, with Valentin and Jonny finishing with over four minutes to spare; Red, down to seven, spent the punishment breaking down pork and lamb. Red won dinner service, Blue nominated Aiden and Jonny, and Aiden went home over garnish-station mistakes and not asking for help.",
   "sources": [
-    "https://www.tvguide.com/tvshows/hells-kitchen/episodes/1030322625/"
+    "https://www.primetimer.com/features/hell-s-kitchen-season-25-who-got-eliminated-after-a-tense-dinner-service-in-episode-5",
+    "https://www.goldderby.com/reality-tv/2026/hells-kitchen-season-25-episode-5-recap/",
+    "https://www.yahoo.com/entertainment/tv/articles/hell-kitchen-recap-losing-chef-010000442.html"
   ]
 }

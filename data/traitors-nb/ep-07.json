@@ -2,19 +2,25 @@
   "num": 7,
   "title": "It's Like Fighting Two Pigs Under a Blanket",
   "air_at": "2026-10-22T20:00:00-04:00",
-  "posted": false,
+  "posted": true,
   "traitor": [],
   "shield": [],
   "mvp": [],
   "close_call": [],
-  "murdered": [],
+  "murdered": [
+    "mark"
+  ],
   "banished": [],
   "quit": [],
   "finalists": [],
   "winners": [],
   "bonus": {},
-  "notes": "Upcoming episode. Not aired yet.",
+  "notes": "Mark, a Faithful, was revealed as the murder victim. The scarecrow mission added about $15,300 and secretly awarded a new Power of the Pardon to the top gold collector, whose identity wasn't shown. Victor got the most Round Table votes (5), but Alan stopped the reveal for the pardon, so his banishment carries into episode 8 and nobody is scored as banished here.",
   "sources": [
-    "https://www.directv.com/insider/the-traitors-new-blood-episode-6/"
+    "https://www.avclub.com/the-traitors-new-blood-recap-episode-7",
+    "https://www.metroweekly.com/2026/10/traitors-new-blood-episode-7-recap/",
+    "https://www.yahoo.com/entertainment/tv/articles/left-traitors-tonight-murdered-banished-002551227.html",
+    "https://dknetwork.draftkings.com/2026/10/22/who-got-eliminated-on-the-traitors-tonight-episode-7-results-recap/",
+    "https://www.hollywoodoutbreak.com/2026/10/22/pardon-cliffhanger-shakes-castle-the-traitors-new-blood-recap/"
   ]
 }
