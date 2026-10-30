@@ -1,20 +1,28 @@
 {
   "num": 8,
-  "title": null,
+  "title": "A Bad Apple Spoils the Whole Bunch",
   "air_at": "2026-10-29T20:00:00-04:00",
-  "posted": false,
+  "posted": true,
   "traitor": [],
   "shield": [],
   "mvp": [],
-  "close_call": [],
-  "murdered": [],
-  "banished": [],
+  "close_call": [
+    "victor"
+  ],
+  "murdered": [
+    "abby"
+  ],
+  "banished": [
+    "tomica"
+  ],
   "quit": [],
   "finalists": [],
   "winners": [],
   "bonus": {},
-  "notes": "Upcoming episode. Not aired yet.",
+  "notes": "Abby L., a Faithful, was revealed as the murder victim. Shane revealed he held the Power of the Pardon and used it to save Victor from the episode 7 vote. There was no mission. Tomica, a Traitor, was banished 10-2, with only Tomica and Jay voting for Victor.",
   "sources": [
-    "https://www.tvinsider.com/1293207/the-traitors-new-blood-schedule/"
+    "https://www.avclub.com/the-traitors-new-blood-recap-episode-8",
+    "https://www.metroweekly.com/2026/10/traitors-new-blood-recap-id-probably-kill-you/",
+    "https://www.directv.com/insider/the-traitors-new-blood-episode-8/"
   ]
 }
