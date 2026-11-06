@@ -1,20 +1,30 @@
 {
   "num": 9,
-  "title": null,
+  "title": "Playing Chess",
   "air_at": "2026-11-05T20:00:00-05:00",
-  "posted": false,
+  "posted": true,
   "traitor": [],
-  "shield": [],
-  "mvp": [],
+  "shield": [
+    "victor"
+  ],
+  "mvp": [
+    "abbey"
+  ],
   "close_call": [],
-  "murdered": [],
+  "murdered": [
+    "morgan"
+  ],
   "banished": [],
   "quit": [],
   "finalists": [],
   "winners": [],
   "bonus": {},
-  "notes": "Upcoming episode. Not aired yet. Schedule from TV Insider's season schedule.",
+  "notes": "The Traitors poisoned one of the players' chalices instead of a normal murder, and Morgan was revealed as the victim; Victor, the expected target, secretly found a shield during the mission. Abbey B. won the final round of the spirits mission, adding $18,000 to the pot. The episode ended before the Round Table, with Victor and Joe set to face off in episode 10, so nobody was banished.",
   "sources": [
-    "https://www.tvinsider.com/1293207/the-traitors-new-blood-schedule/"
+    "https://www.today.com/popculture/tv/who-went-home-traitors-new-blood-episode-9-murdered-banished-rcna607779",
+    "https://www.yahoo.com/entertainment/tv/reviews/articles/traitors-blood-episode-9-recap-020000478.html",
+    "https://www.metroweekly.com/2026/11/traitors-new-blood-episode-9-recap/",
+    "https://decider.com/2026/11/05/who-went-home-in-the-traitors-new-blood-this-week-new-eliminated-player-revealed/",
+    "https://www.northjersey.com/story/news/2026/11/05/the-traitors-episode-9-who-went-home-murdered-banished-poisoned/92627061007/"
   ]
 }

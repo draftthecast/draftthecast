@@ -1,6 +1,6 @@
 {
   "num": 10,
-  "title": null,
+  "title": "The Sun, the Moon and the Truth",
   "air_at": "2026-11-12T20:00:00-05:00",
   "posted": false,
   "traitor": [],
@@ -13,8 +13,9 @@
   "finalists": [],
   "winners": [],
   "bonus": {},
-  "notes": "Upcoming episode. Not aired yet. Schedule from TV Insider's season schedule.",
+  "notes": "Upcoming episode. Not aired yet. Title from TODAY's episode 9 recap; schedule from TV Insider's season schedule.",
   "sources": [
-    "https://www.tvinsider.com/1293207/the-traitors-new-blood-schedule/"
+    "https://www.tvinsider.com/1293207/the-traitors-new-blood-schedule/",
+    "https://www.today.com/popculture/tv/who-went-home-traitors-new-blood-episode-9-murdered-banished-rcna607779"
   ]
 }
