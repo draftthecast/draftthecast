@@ -1,21 +1,32 @@
 {
   "num": 8,
-  "title": null,
+  "title": "Thumb-thing's Cooking",
   "air_at": "2026-11-12T20:00:00-05:00",
   "posted": false,
-  "challenge_win": null,
+  "challenge_win": "red",
   "service_win": null,
-  "nominated": [],
+  "nominated": [
+    "mya",
+    "kylie",
+    "sandra",
+    "gabe",
+    "miles",
+    "miguel"
+  ],
   "ejected": [],
-  "eliminated": [],
+  "eliminated": [
+    "miles"
+  ],
   "quit": [],
   "switched": [],
   "black_jacket": [],
   "final2": [],
   "winner": null,
   "bonus": {},
-  "notes": "Upcoming episode. Not aired yet.",
+  "notes": "Held: only one independent source so far (Gold Derby, also syndicated on Yahoo and copied by bingchef.com) says Miles went home; an uncredited copy-site recap (bingchef/diningandcooking, original outlet unknown) agrees but doesn't count. Red won the 'Cell's Kitchen' challenge and Kylie cut her thumb but kept cooking. Instead of a scored team service, Ramsay put Mya, Kylie, Sandra, Gabe, Miles and Miguel in a cook-for-your-life test (listed as nominated), and Miles was sent home over his flank steak. Gold Derby describes Mike's move from Blue to Red at the start of this episode; it is already recorded in ep 7, so switched is left empty here. Needs a second source before posting.",
   "sources": [
-    "https://www.pogdesign.co.uk/cat/Hells-Kitchen-US/Season-25"
+    "https://www.goldderby.com/reality-tv/2026/hells-kitchen-season-25-episode-8-recap/",
+    "https://www.yahoo.com/entertainment/tv/reviews/articles/hell-kitchen-recap-bloody-painful-020000516.html",
+    "https://www.bingchef.com/94789/hells-kitchen-episode-8-recap-contestant-cuts-off-chunk-of-finger/"
   ]
 }

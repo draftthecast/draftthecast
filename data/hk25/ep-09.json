@@ -1,6 +1,6 @@
 {
   "num": 9,
-  "title": null,
+  "title": "Revolutionary Revenge",
   "air_at": "2026-11-19T20:00:00-05:00",
   "posted": false,
   "challenge_win": null,
@@ -14,8 +14,9 @@
   "final2": [],
   "winner": null,
   "bonus": {},
-  "notes": "Upcoming episode. Not aired yet.",
+  "notes": "Upcoming episode. Not aired yet. Title from TVmaze; FOX's synopsis says more than one chef is eliminated.",
   "sources": [
-    "https://www.pogdesign.co.uk/cat/Hells-Kitchen-US/Season-25"
+    "https://www.pogdesign.co.uk/cat/Hells-Kitchen-US/Season-25",
+    "https://www.tvmaze.com/seasons/201894/hells-kitchen-season-25/episodeguide"
   ]
 }

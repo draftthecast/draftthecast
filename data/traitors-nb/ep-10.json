@@ -2,20 +2,28 @@
   "num": 10,
   "title": "The Sun, the Moon and the Truth",
   "air_at": "2026-11-12T20:00:00-05:00",
-  "posted": false,
-  "traitor": [],
+  "posted": true,
+  "traitor": [
+    "shane"
+  ],
   "shield": [],
   "mvp": [],
   "close_call": [],
-  "murdered": [],
-  "banished": [],
+  "murdered": [
+    "ben"
+  ],
+  "banished": [
+    "joe"
+  ],
   "quit": [],
   "finalists": [],
   "winners": [],
   "bonus": {},
-  "notes": "Upcoming episode. Not aired yet. Title from TODAY's episode 9 recap; schedule from TV Insider's season schedule.",
+  "notes": "Joe was banished at the Round Table and confirmed he was a Traitor, the second Traitor out in two weeks; no vote tally was reported. Katie, now the last Traitor, recruited Shane, and Ben was revealed as the murder victim the next morning. The mission was a shield puzzle that added $26,000 to the pot, with no new shield or standout named.",
   "sources": [
-    "https://www.tvinsider.com/1293207/the-traitors-new-blood-schedule/",
-    "https://www.today.com/popculture/tv/who-went-home-traitors-new-blood-episode-9-murdered-banished-rcna607779"
+    "https://www.avclub.com/the-traitors-new-blood-recap-episode-10",
+    "https://www.metroweekly.com/2026/11/traitors-new-blood-episode-10-recap/",
+    "https://www.nbc.com/nbc-insider/traitor-joe-banished-the-traitors-new-blood",
+    "https://dknetwork.draftkings.com/2026/11/12/who-got-eliminated-on-the-traitors-tonight-episode-10-results-recap/"
   ]
 }
