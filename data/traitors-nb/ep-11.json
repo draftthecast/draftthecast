@@ -1,20 +1,29 @@
 {
   "num": 11,
-  "title": null,
+  "title": "I'm Fighting Till the End",
   "air_at": "2026-11-19T20:00:00-05:00",
-  "posted": false,
+  "posted": true,
   "traitor": [],
   "shield": [],
-  "mvp": [],
+  "mvp": [
+    "katie"
+  ],
   "close_call": [],
-  "murdered": [],
-  "banished": [],
+  "murdered": [
+    "clyde"
+  ],
+  "banished": [
+    "jay"
+  ],
   "quit": [],
   "finalists": [],
   "winners": [],
   "bonus": {},
-  "notes": "Upcoming. Two-hour finale night (episodes 11 and 12) per TV Insider's season schedule.",
+  "notes": "Jay was banished at the Round Table by a near-unanimous vote and revealed he was a Faithful; Katie and Shane then murdered Clyde, revealed at breakfast. In the final helicopter mission Katie jumped into the loch to secure the win, bringing the pot to its final $246,300. Episode split follows AV Club's part-one/part-two recap; Reality Tea also says the finale opened with Jay's banishment and Clyde's murder.",
   "sources": [
-    "https://www.tvinsider.com/1293207/the-traitors-new-blood-schedule/"
+    "https://www.avclub.com/the-traitors-new-blood-recap-episodes-11-and-12",
+    "https://www.realitytea.com/2026/11/20/traitors-new-blood-shane-beatty-historic-win/",
+    "https://www.metroweekly.com/2026/11/traitors-new-blood-season-finale-recap/",
+    "https://www.tvline.com/2320452/the-traitors-new-blood-season-5-finale-recap-shane-winner/"
   ]
 }

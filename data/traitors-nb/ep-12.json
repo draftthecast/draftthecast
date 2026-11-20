@@ -1,20 +1,35 @@
 {
   "num": 12,
-  "title": null,
+  "title": "Who Do You Truly Trust",
   "air_at": "2026-11-19T21:00:00-05:00",
-  "posted": false,
+  "posted": true,
   "traitor": [],
   "shield": [],
   "mvp": [],
   "close_call": [],
   "murdered": [],
-  "banished": [],
+  "banished": [
+    "kriste",
+    "katie",
+    "victor"
+  ],
   "quit": [],
-  "finalists": [],
-  "winners": [],
+  "finalists": [
+    "shane",
+    "wyatt",
+    "abbey",
+    "victor",
+    "katie"
+  ],
+  "winners": [
+    "shane"
+  ],
   "bonus": {},
-  "notes": "Upcoming. Two-hour finale night (episodes 11 and 12) per TV Insider's season schedule.",
+  "notes": "Kriste was banished at the last regular Round Table without revealing her role. At the Fire of Truth the group banished Katie (Traitor) 4-1, then Victor (Faithful), and Shane, Wyatt and Abbey voted to end the game, so Shane, a late-recruited Traitor, won the $246,300 pot alone. Finalists are the five at the Fire of Truth endgame; close_call left empty because the vote counts weren't reported consistently by two sources.",
   "sources": [
-    "https://www.tvinsider.com/1293207/the-traitors-new-blood-schedule/"
+    "https://www.avclub.com/the-traitors-new-blood-recap-episodes-11-and-12",
+    "https://www.tvline.com/2320452/the-traitors-new-blood-season-5-finale-recap-shane-winner/",
+    "https://www.metroweekly.com/2026/11/traitors-new-blood-season-finale-recap/",
+    "https://www.realitytea.com/2026/11/20/traitors-new-blood-shane-beatty-historic-win/"
   ]
 }
