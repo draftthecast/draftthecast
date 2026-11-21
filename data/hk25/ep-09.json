@@ -2,23 +2,25 @@
   "num": 9,
   "title": "Revolutionary Revenge",
   "air_at": "2026-11-19T20:00:00-05:00",
-  "posted": false,
-  "challenge_win": null,
+  "posted": true,
+  "challenge_win": "blue",
   "service_win": null,
   "nominated": [],
   "ejected": [],
-  "eliminated": [],
+  "eliminated": [
+    "kylie",
+    "miguel"
+  ],
   "quit": [],
   "switched": [],
   "black_jacket": [],
   "final2": [],
   "winner": null,
   "bonus": {},
-  "notes": "Aired Nov 19. Still held: about 40 hours after air, no recap naming who went home was found (searched Gold Derby, Primetimer, Moviedelic, entertainmentNow, hellskitchenrecipes, Hell's Kitchen Wiki and others; several pages wouldn't load). FOX's synopsis says the five-dome challenge sends one team to Boston to sail and the other back to bake bread, and both teams struggle at service, leading to more than one elimination. Will check again next run.",
+  "notes": "Blue won the America 250th five-dome challenge 5-4 and the Boston sailing trip; Mike used his punishment pass to go along, sending Jonny to bake bread. Both teams lost dinner service, the season's first joint loss, and Ramsay sent home Kylie and Miguel. Posted on the owner's approval with one independent source (CT Insider, 'Two chefs eliminated for first time this season on Connecticut-filmed Hell's Kitchen', Nov 19); nominees weren't given, so they're left empty.",
   "sources": [
-    "https://www.pogdesign.co.uk/cat/Hells-Kitchen-US/Season-25/Episode-9",
-    "https://www.tvmaze.com/seasons/201894/hells-kitchen-season-25/episodeguide",
-    "https://www.fox.com/watch/episode/fmc-st5h8fkr3fplth5t/revolutionary-revenge",
-    "https://www.rottentomatoes.com/tv/hells_kitchen/s25"
+    "https://www.ctinsider.com/ (Entertainment: 'Two chefs eliminated for first time this season on Connecticut-filmed Hell's Kitchen', Andrew DaRosa and Joseph Tucci, Nov 19 2026)",
+    "https://hellskitchen.fandom.com/f/p/4400000000000090464",
+    "https://www.fox.com/watch/episode/fmc-st5h8fkr3fplth5t/revolutionary-revenge"
   ]
 }
