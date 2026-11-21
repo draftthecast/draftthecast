@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chefStates, draftInfo, effectiveEpisodes, firstUnposted, nextEpisode, outIds, standings } from "./scoring.ts";
+import { awaitingResults, chefStates, draftInfo, effectiveEpisodes, firstUnposted, nextEpisode, outIds, standings } from "./scoring.ts";
 import { SHOWS, scoringGroups, showByKey } from "./shows.ts";
 import type { Contestant, Episode, League, Member, Pick } from "./types.ts";
 
@@ -126,4 +126,29 @@ test("a held episode that already aired doesn't block guessing on the next one",
   assert.equal(nextEpisode(sched, now)?.num, 5);
   assert.equal(firstUnposted(sched)?.num, 4);
   assert.equal(nextEpisode(sched.slice(0, 2), now)?.num, 4);
+});
+
+test("guessing on the next episode waits for last week's results", () => {
+  const now = Date.parse("2026-11-21T12:00:00-05:00");
+  const sched = [
+    ep(8, {}),
+    ep(9, { posted: false, air_at: "2026-11-19T20:00:00-05:00" }),
+    ep(10, { posted: false, air_at: "2026-12-03T20:00:00-05:00" }),
+  ];
+  const next = nextEpisode(sched, now);
+  assert.equal(next?.num, 10);
+  assert.equal(awaitingResults(sched, next, now)?.num, 9);
+  sched[1].posted = true;
+  assert.equal(awaitingResults(sched, nextEpisode(sched, now), now), null);
+});
+
+test("a double episode earlier the same night doesn't block guessing on the second", () => {
+  const now = Date.parse("2026-11-19T20:30:00-05:00");
+  const sched = [
+    ep(11, { posted: false, air_at: "2026-11-19T20:00:00-05:00" }),
+    ep(12, { posted: false, air_at: "2026-11-19T21:00:00-05:00" }),
+  ];
+  const next = nextEpisode(sched, now);
+  assert.equal(next?.num, 12);
+  assert.equal(awaitingResults(sched, next, now), null);
 });

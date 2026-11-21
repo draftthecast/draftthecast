@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ResultsEditor, { draftFromEpisode, draftToRow, emptyDraft, type ResultsDraft } from "@/components/ResultsEditor";
 import { createClient } from "@/lib/supabase/client";
-import { chefStates, draftInfo, effectiveEpisodes, eventIds, firstUnposted, isLocked, nextEpisode, outIds, standings, winnerIds, type ChefState, type DraftInfo } from "@/lib/scoring";
+import { awaitingResults, chefStates, draftInfo, effectiveEpisodes, eventIds, firstUnposted, isLocked, nextEpisode, outIds, standings, winnerIds, type ChefState, type DraftInfo } from "@/lib/scoring";
 import { cap, showByKey, type ShowDef } from "@/lib/shows";
 import ScoringTable from "@/components/ScoringTable";
 import type { Contestant, Episode, Guess, League, LeagueResult, Member, Pick, Profile, Season } from "@/lib/types";
@@ -150,6 +150,8 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
   const d = draftInfo(league, members, picks);
   const nextEp = nextEpisode(episodes);
   const locked = isLocked(nextEp);
+  // Last week's episode aired but its results aren't posted: hold guessing on the next one until they are.
+  const waitingOn = locked ? null : awaitingResults(episodes, nextEp);
   const posted = episodes.filter((e) => e.posted);
   const lastNum = posted.length ? posted[posted.length - 1].num : 0;
   const teamName = (id: string | null) => members.find((m) => m.id === id)?.team_name ?? "Unknown team";
@@ -189,7 +191,7 @@ export default function LeagueApp({ leagueId, userId, isSiteAdmin }: { leagueId:
 
   const x: Ctx = {
     show, league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d,
-    nextEp, locked, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab,
+    nextEp, locked, waitingOn, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab,
     leagueResults: data.leagueResults, reload: load,
   };
   const View = VIEWS[tabs.some(([k]) => k === tab) ? tab : "standings"];
@@ -238,7 +240,7 @@ interface Ctx {
   show: ShowDef; league: League; members: Member[]; picks: Pick[]; guesses: Guess[]; contestants: Contestant[]; episodes: Episode[];
   profiles: Record<string, Profile>; CHEF: Record<string, Contestant>; st: Record<string, ChefState>;
   me: Member | null; isCommish: boolean; isSiteAdmin: boolean; acting: Member | null; d: DraftInfo;
-  nextEp: Episode | null; locked: boolean; posted: Episode[]; lastNum: number;
+  nextEp: Episode | null; locked: boolean; waitingOn: Episode | null; posted: Episode[]; lastNum: number;
   teamName: (id: string | null) => string; managerName: (m: Member) => string; first: (cid: string) => string;
   active: Contestant[]; chip: (cid: string, withPts?: boolean) => React.ReactNode; pickFor: React.ReactNode;
   run: (fn: () => PromiseLike<{ error: { message: string } | null }>, ok?: string) => Promise<boolean>;
@@ -262,6 +264,8 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
     return <><b>Draft in progress</b><span className="small soft">{teamName(d.turn)} is picking.</span><button className="btn ghost small" onClick={() => setTab("draft")}>Watch the draft</button></>;
   if (!nextEp) return <><b>The season is over</b><span className="small soft">Check the final standings below.</span></>;
   const mine = me && guesses.find((g) => g.member_id === me.id && g.episode_num === nextEp.num);
+  if (x.waitingOn && !mine)
+    return <><b>Guesses for episode {nextEp.num} open soon</b><span className="small soft">They open once episode {x.waitingOn.num} results are posted.</span></>;
   if (!locked && me && !mine)
     return <><b>{x.show.guessQuestion(nextEp.num)}</b><span className="small soft">A correct guess is worth {x.show.guessPts} points.</span><button className="btn sun" onClick={() => setTab("guess")}>Make your guess</button></>;
   if (mine) return <><b>You&apos;re set for episode {nextEp.num}</b><span className="small soft">Your guess: {CHEF[mine.contestant_id]?.name}.</span></>;
@@ -419,6 +423,7 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
 function Guess({ x }: { x: Ctx }) {
 const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, st, me, isCommish, isSiteAdmin, acting, d, nextEp, locked, posted, lastNum, teamName, managerName, first, active, chip, pickFor, run, busy, supabase, flash, setConfirm, setTab } = x;
   const n = nextEp?.num;
+  const closed = locked || !!x.waitingOn;
   const myGuess = acting && n ? guesses.find((g) => g.member_id === acting.id && g.episode_num === n)?.contestant_id ?? "" : "";
   const [pick, setPick] = useState(myGuess);
   const [winner, setWinner] = useState(acting?.winner_pick ?? "");
@@ -438,15 +443,19 @@ const { league, members, picks, guesses, contestants, episodes, profiles, CHEF, 
       <div className="grid2">
         <div className="panel">
           <h3>{n ? x.show.guessQuestion(n) : "No episodes left"}</h3>
+          {x.waitingOn && n && (
+            <p className="soft small">Guesses for episode {n} open once episode {x.waitingOn.num} results are posted, so nobody picks a {x.show.noun.one} who already went home.</p>
+          )}
+          {!closed && n && <p className="soft small">This guess counts for episode {n}.</p>}
           {acting && n ? (
             <>
-              <select id="guess-pick" value={pick} disabled={locked} onChange={(e) => setPick(e.target.value)} aria-label="Who's out">
+              <select id="guess-pick" value={pick} disabled={closed} onChange={(e) => setPick(e.target.value)} aria-label="Who's out">
                 <option value="">Choose a {x.show.noun.one}</option>
                 {opts}
               </select>
-              <button className="btn brand" disabled={locked || busy || !pick}
+              <button className="btn brand" disabled={closed || busy || !pick}
                 onClick={() => run(() => supabase.rpc("set_guess", { p_league: league.id, p_episode: n, p_contestant: pick, p_member: acting.id }), `Guess saved: ${CHEF[pick]?.name}.`)}>
-                {locked ? "Guesses are locked" : myGuess ? "Change my guess" : "Save my guess"}
+                {locked ? "Guesses are locked" : x.waitingOn ? `Opens after episode ${x.waitingOn.num} results` : myGuess ? `Change my episode ${n} guess` : `Save my episode ${n} guess`}
               </button>
             </>
           ) : <span className="soft">Join the league to guess.</span>}

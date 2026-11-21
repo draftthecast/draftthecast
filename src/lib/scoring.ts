@@ -205,6 +205,30 @@ export function nextEpisode(episodes: Episode[], now = Date.now()): Episode | nu
   return sorted.find((e) => !e.air_at || new Date(e.air_at).getTime() > now) ?? sorted[0] ?? null;
 }
 
+/** Earlier episodes that air within this many hours of the next one count as the same night (Traitors double episodes). */
+const SAME_NIGHT_MS = 12 * 3600 * 1000;
+
+/**
+ * An earlier episode that has aired but whose results aren't posted yet, from a previous week.
+ * While one exists, guessing on `ep` stays closed: a late guesser could otherwise pick someone
+ * who already went home, and the guess would silently count for the following week.
+ * An earlier episode from the same night (a double episode) doesn't block.
+ */
+export function awaitingResults(episodes: Episode[], ep: Episode | null, now = Date.now()): Episode | null {
+  if (!ep) return null;
+  const nextAt = ep.air_at ? new Date(ep.air_at).getTime() : null;
+  return (
+    [...episodes]
+      .sort((a, b) => a.num - b.num)
+      .find((e) => {
+        if (e.num >= ep.num || e.posted || !e.air_at) return false;
+        const at = new Date(e.air_at).getTime();
+        if (at > now) return false;
+        return nextAt === null || nextAt - at >= SAME_NIGHT_MS;
+      }) ?? null
+  );
+}
+
 export function isLocked(ep: Episode | null, now = Date.now()): boolean {
   if (!ep) return true;
   return ep.posted || (!!ep.air_at && new Date(ep.air_at).getTime() <= now);

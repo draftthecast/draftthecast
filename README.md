@@ -20,6 +20,7 @@ Fantasy leagues for reality TV, starting with Hell's Kitchen Season 25. Friends 
 2. Paste all of `supabase/migrations/20261004000001_schema.sql` and click **Run**.
 3. New query again: paste `supabase/migrations/20261004000002_seed_hells_kitchen_25.sql` and click **Run**.
 3a. New query again: paste `supabase/migrations/20261005000003_league_results.sql` and click **Run**. This lets each league's commissioner enter results for their own league.
+3b. Then run `supabase/migrations/20261019000004_multi_show.sql` and `supabase/migrations/20261121000005_guess_waits_for_results.sql` the same way, in that order. The last one keeps weekly guesses closed until the previous week's results are posted.
 4. Go to **Project Settings**, then **API** (or **Data API**). Copy the **Project URL** and the **anon** (or **publishable**) key.
 
 ### 2. Hosting (Vercel)
