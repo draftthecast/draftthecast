@@ -98,29 +98,24 @@ Add a folder named for the season (e.g. `traitors-us6`) with a `contestants.json
 
 ## Rules for automatic entry
 
-- Only write an episode after it has aired and at least one detailed recap exists.
-- Confirm who went home (sent home, murdered or banished) with **two independent sources**. If sources disagree or only one exists, write the file with `"posted": false` so it doesn't count yet, and say so in `notes`. A held episode only delays points; guessing on the next episode stays open.
-- One detailed recap is enough for the rest of the episode (challenge, service, standouts, nominations) once who went home is confirmed by two.
-- Leave a team field `null` rather than guess.
+- Only write an episode after it has aired.
+- **Post as soon as one credible source names who went home** (sent home, murdered or banished): a detailed recap, a short "who went home" article, or a news headline that names them. Don't hold an episode waiting for a second source.
+- Hold (`"posted": false`) only when no credible source names who went home yet, or when two credible sources disagree. Say why in `notes`.
+- The same recap is enough for the rest of the episode (challenge, service, standouts, nominations). Leave a field empty or `null` when the source doesn't say; don't guess.
+- If a later source shows a posted result was wrong, correct the file and say so in the commit message.
 - Add next episode's air time if a schedule source lists it: add or update `ep-NN.json` for the upcoming episode with `"posted": false` and empty results.
 - New chefs never appear mid-season in Hell's Kitchen. If a recap names someone not in `contestants.json`, it's a nickname (e.g. "Serenity" is `reni`, "Jonny G" is `jonny`) or a mistake; don't invent ids.
-- Never change an earlier posted episode unless a source clearly shows an error; say so in the commit message.
 
-### Finding two sources
+### Finding a source
 
-Search several ways before settling for one source: "<show> season N episode N recap", "<show> who went home episode N", "<show> eliminated" plus the date, and the contestant names you suspect. Recaps often appear a day or two after the episode, so a held episode is worth checking again on the next run.
+Search engines differ: the one the scheduled task uses often misses pages that Google shows. So search many ways before giving up: "<show> season N episode N recap", "<show> who went home episode N", "<show> eliminated" plus the date, "two chefs eliminated", the episode title, and each remaining contestant's name with "eliminated".
 
-What counts as a source:
+Where results usually show up first:
 
-- **Detailed recaps** from any of these, or similar entertainment outlets: Gold Derby, Primetimer, TV Insider, Soap Central, Reality Blurred, Moviedelic, entertainmentNow, Parade, Screen Rant, Dexerto, TVLine, Decider, Vulture, AV Club, Entertainment Weekly, Cinemablend, Meaww, TellTale TV, DirecTV Insider, the network's own site (FOX, NBC Insider).
-- **Short "who went home" articles** count, as long as they name who left.
-- **A search-result headline** counts only if it names who went home (e.g. "Jeyda eliminated"). A headline that hints ("over fries and spinach") doesn't.
+- **Local news.** Hell's Kitchen Season 25 is filmed at Foxwoods in Connecticut, and **CT Insider** (ctinsider.com, also New Haven Register, CT Post, Greenwich Time) recaps each episode the night it airs, e.g. "Two chefs eliminated for first time this season on Connecticut-filmed 'Hell's Kitchen'".
+- **Entertainment outlets:** Gold Derby, Primetimer, TV Insider, Soap Central, Reality Blurred, Moviedelic, entertainmentNow, Parade, Screen Rant, Dexerto, TVLine, Decider, Vulture, AV Club, Entertainment Weekly, Cinemablend, Meaww, TellTale TV, DirecTV Insider, Sportskeeda, the network's own site (FOX, NBC Insider). Yahoo, MSN and AOL usually republish one of these.
+- **Fan pages**, as a check only: the Hell's Kitchen Wiki (hellskitchen.fandom.com), r/HellsKitchen or r/TheTraitors discussion threads, and YouTube recap titles. Use them to confirm or fill in details, but don't post on a fan page alone.
 
-What doesn't count as independent:
-
-- Syndicated copies: Yahoo, MSN, AOL and similar usually republish another outlet's article (Gold Derby, EW, Parade). Count the original once.
-- Scraper or copy sites with no byline that reproduce another recap (e.g. bingchef.com copying Gold Derby).
-- A page whose details plainly belong to a different episode (check the episode number and the challenge).
-- Fan wikis and forums, unless the page shows an elimination table that matches a recap.
+What doesn't count: a page plainly about a different episode or season (check the episode number and the challenge), a network synopsis written before airing, or an AI-generated summary with no article behind it.
 
 If a page won't load, try another outlet instead of giving up: many sites block automated reading, and the same news is usually on several of them.
